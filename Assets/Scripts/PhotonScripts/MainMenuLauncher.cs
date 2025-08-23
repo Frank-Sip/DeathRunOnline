@@ -33,7 +33,7 @@ public class MainMenuLauncher : MonoBehaviourPunCallbacks
     {
         PlayerPrefs.SetString(nickNameKey, nickname);
         
-        PhotonNetwork.NickName = nickname.ToUpper();
+        PhotonNetwork.NickName = nickname;
         print(nickname + "is trying to connect to the room");
         
         PhotonNetwork.ConnectUsingSettings();

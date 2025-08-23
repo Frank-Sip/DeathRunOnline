@@ -8,18 +8,34 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     [SerializeField] private float moveSpeed;
+    [SerializeField] private LayerMask collisionMask;
+    [SerializeField] private TMP_Text nameLabel;
+    [SerializeField] private Camera camera;
+    
+    [Header("Mouse Settings")]
     [SerializeField] private float mouseSensitivity;
     [SerializeField] private float mousePitchTopLimit;
     [SerializeField] private float mousePitchLowLimit;
     [SerializeField] private float horizontalRotationSmoothness;
-    [SerializeField] private LayerMask collisionMask;
-    [SerializeField] private TMP_Text nameLabel;
-    [SerializeField] private Camera camera;
+    
+    [Header("Jump Settings")]
+    [SerializeField] private float jumpForce = 8f;
+    [SerializeField] private float coyoteTime = 0.2f;
+    [SerializeField] private float jumpBufferTime = 0.2f;
+    [SerializeField] private Transform groundCheckOrigin;
+    [SerializeField] private float groundCheckRadius = 0.5f;
+    [SerializeField] private float groundCheckDistance = 0.1f;
+    [SerializeField] private LayerMask groundMask;
+    [SerializeField] private int maxGroundHits = 5;
     
     private PhotonView photonView;
     private float cameraPitch;
     private float horizontalRotation;
     private Rigidbody rb;
+    private float coyoteTimeCounter;
+    private float jumpBufferCounter;
+    private bool isGrounded;
+    private RaycastHit[] groundHits;
 
     public PhotonView PhotonView => photonView ?? GetComponent<PhotonView>();
 
@@ -31,12 +47,15 @@ public class Player : MonoBehaviour
         nameLabel.text = photonView.Owner.NickName;
         camera.enabled = PhotonView.IsMine;
         if (PhotonView.IsMine) Cursor.lockState = CursorLockMode.Locked;
+        groundHits = new RaycastHit[maxGroundHits];
     }
 
     private void Update()
     {
         Move();
         MouseLook();
+        CheckGrounded();
+        HandleJumpInput();
     }
 
     private void Move()
@@ -60,13 +79,49 @@ public class Player : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
-        horizontalRotation += mouseX;
-        float currentRotation = Mathf.LerpAngle(transform.eulerAngles.y, horizontalRotation, Time.deltaTime * horizontalRotationSmoothness);
-        transform.eulerAngles = new Vector3(0f, currentRotation, 0f);
+        transform.Rotate(Vector3.up * mouseX);
 
         cameraPitch -= mouseY;
         cameraPitch = Mathf.Clamp(cameraPitch, mousePitchTopLimit, mousePitchLowLimit);
-        camera.transform.localEulerAngles = new Vector3(cameraPitch, 0f, 0f);
+        camera.transform.localRotation = Quaternion.Euler(cameraPitch, 0f, 0f);
+    }
+    
+    private void CheckGrounded()
+    {
+        Vector3 sphereCenter = groundCheckOrigin != null ? groundCheckOrigin.position : transform.position + Vector3.up * 0.1f;
+
+        int hitCount = Physics.SphereCastNonAlloc(sphereCenter, groundCheckRadius, Vector3.down, groundHits, groundCheckDistance, groundMask);
+
+        bool wasGrounded = isGrounded;
+        isGrounded = hitCount > 0;
+
+        if (isGrounded)
+        {
+            coyoteTimeCounter = coyoteTime;
+        }
+        else
+        {
+            coyoteTimeCounter -= Time.deltaTime;
+        }
+    }
+
+    private void HandleJumpInput()
+    {
+        if (Input.GetButtonDown("Jump"))
+        {
+            jumpBufferCounter = jumpBufferTime;
+        }
+        else
+        {
+            jumpBufferCounter -= Time.deltaTime;
+        }
+
+        if (jumpBufferCounter > 0 && coyoteTimeCounter > 0)
+        {
+            rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
+            jumpBufferCounter = 0;
+            coyoteTimeCounter = 0;
+        }
     }
 
     private void OnCollisionEnter(Collision other)
@@ -90,5 +145,12 @@ public class Player : MonoBehaviour
     {
         print(PhotonView.ViewID);
         print(PhotonNetwork.NickName);
+    }
+    
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.blue;
+        Vector3 sphereCenter = groundCheckOrigin.position;
+        Gizmos.DrawWireSphere(sphereCenter, groundCheckRadius);
     }
 }

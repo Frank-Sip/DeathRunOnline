@@ -18,6 +18,7 @@ public class MainMenuLauncher : MonoBehaviourPunCallbacks
     private void Start()
     {
         connectionButton.onClick.AddListener(HandleConnectButton);
+        InputField.onSubmit.AddListener(OnInputSubmit);
         InputField.onValueChanged.AddListener(VerifyName);
         VerifyName(InputField.text);
     }
@@ -38,6 +39,14 @@ public class MainMenuLauncher : MonoBehaviourPunCallbacks
         PhotonNetwork.ConnectUsingSettings();
 
         connectionButton.interactable = false;
+    }
+    
+    private void OnInputSubmit(string name)
+    {
+        if (connectionButton.interactable)
+        {
+            HandleConnectButton();
+        }
     }
     
     public override void OnConnectedToMaster()

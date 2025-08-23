@@ -52,10 +52,14 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        Move();
-        MouseLook();
-        CheckGrounded();
-        HandleJumpInput();
+        if (PhotonView.IsMine)
+        {
+            Move();
+            MouseLook();
+            CheckGrounded();
+            HandleJumpInput();
+        }
+        SetNameLabel();
     }
 
     private void Move()
@@ -84,6 +88,22 @@ public class Player : MonoBehaviour
         cameraPitch -= mouseY;
         cameraPitch = Mathf.Clamp(cameraPitch, mousePitchTopLimit, mousePitchLowLimit);
         camera.transform.localRotation = Quaternion.Euler(cameraPitch, 0f, 0f);
+    }
+
+    private void SetNameLabel()
+    {
+        if (PhotonView.IsMine)
+        {
+            nameLabel.transform.rotation = Quaternion.LookRotation(nameLabel.transform.position - camera.transform.position);
+        }
+        else
+        {
+            Camera mainCam = Camera.main;
+            if (mainCam != null)
+            {
+                nameLabel.transform.rotation = Quaternion.LookRotation(nameLabel.transform.position - mainCam.transform.position);
+            }
+        }
     }
     
     private void CheckGrounded()

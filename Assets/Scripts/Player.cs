@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
 {
     [SerializeField] private float moveSpeed;
     [SerializeField] private LayerMask collisionMask;
+    [SerializeField] private TMP_Text nameLabel;
     
     private PhotonView photonView;
 
@@ -17,6 +18,7 @@ public class Player : MonoBehaviour
     private void Start()
     {
         photonView = GetComponent<PhotonView>();
+        nameLabel.text = photonView.Owner.NickName;
     }
 
     private void Update()

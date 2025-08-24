@@ -44,7 +44,9 @@ GameObject:
   - component: {fileID: 2122217864652082889}
   - component: {fileID: 2122217864652082890}
   - component: {fileID: 8898520695358208771}
-  - component: {fileID: -3891707255618225755}
+  - component: {fileID: 441830422414801446}
+  - component: {fileID: 2169161787714951623}
+  - component: {fileID: 1357956668931637226}
   - component: {fileID: 8371059747553200921}
   - component: {fileID: -9147860590131820195}
   m_Layer: 3
@@ -153,7 +155,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
---- !u!114 &-3891707255618225755
+--- !u!114 &441830422414801446
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -162,19 +164,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 2122217864652082891}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9436f6dc66a6d54da09ac86f259c7de, type: 3}
+  m_Script: {fileID: 11500000, guid: 7cc03047dd0816f4c8244e11ff990056, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2169161787714951623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2122217864652082891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e259f43e8ab5f43499e93e7e1683f527, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 10
   collisionMask:
     serializedVersion: 2
     m_Bits: 8
-  nameLabel: {fileID: 8780159330038191672}
-  camera: {fileID: 6857344850585827140}
-  mouseSensitivity: 2
-  mousePitchTopLimit: -30
-  mousePitchLowLimit: 30
-  horizontalRotationSmoothness: 0.05
   jumpForce: 8
   coyoteTime: 0.2
   jumpBufferTime: 0.2
@@ -185,6 +193,24 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   maxGroundHits: 1
+--- !u!114 &1357956668931637226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2122217864652082891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e031a84beaf6f48b14f217030243ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nameLabel: {fileID: 8780159330038191672}
+  playerCamera: {fileID: 6857344850585827140}
+  mouseSensitivity: 2
+  mousePitchTopLimit: -30
+  mousePitchLowLimit: 30
+  horizontalRotationSmoothness: 0.05
 --- !u!114 &8371059747553200921
 MonoBehaviour:
   m_ObjectHideFlags: 0

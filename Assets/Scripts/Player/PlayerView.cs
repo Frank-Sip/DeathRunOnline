@@ -36,10 +36,7 @@ public class PlayerView : MonoBehaviour
 
     public void UpdateMouseLook(float mouseX, float mouseY)
     {
-        // Rotación horizontal del jugador
         transform.Rotate(Vector3.up * mouseX);
-
-        // Rotación vertical de la cámara
         cameraPitch -= mouseY;
         cameraPitch = Mathf.Clamp(cameraPitch, mousePitchTopLimit, mousePitchLowLimit);
         playerCamera.transform.localRotation = Quaternion.Euler(cameraPitch, 0f, 0f);

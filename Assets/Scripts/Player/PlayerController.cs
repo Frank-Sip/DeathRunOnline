@@ -10,11 +10,9 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
-        // Obtener referencias a los componentes MVC
         playerModel = GetComponent<PlayerModel>();
         playerView = GetComponent<PlayerView>();
 
-        // Inicializar la vista según si es jugador local o remoto
         if (playerModel.PhotonView.IsMine)
         {
             playerView.InitializeForLocalPlayer(playerModel.PhotonView.Owner.NickName);
@@ -34,8 +32,6 @@ public class PlayerController : MonoBehaviour
             HandleJumpInput();
             UpdateGameplayLogic();
         }
-
-        // Actualizar elementos visuales para todos los jugadores
         UpdateVisuals();
     }
 
@@ -44,14 +40,9 @@ public class PlayerController : MonoBehaviour
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
 
-        // Obtener direcciones de la cámara desde la vista
         Vector3 forward = playerView.GetCameraForward();
         Vector3 right = playerView.GetCameraRight();
-
-        // Calcular dirección de movimiento
         Vector3 moveDirection = (forward * vertical + right * horizontal).normalized;
-
-        // Aplicar movimiento a través del modelo
         playerModel.Move(moveDirection, playerModel.GetRigidbodyVelocity());
     }
 
@@ -59,19 +50,14 @@ public class PlayerController : MonoBehaviour
     {
         float mouseX = Input.GetAxis("Mouse X") * playerView.MouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * playerView.MouseSensitivity;
-
-        // Actualizar rotación de cámara a través de la vista
         playerView.UpdateMouseLook(mouseX, mouseY);
     }
 
     private void HandleJumpInput()
     {
         bool jumpPressed = Input.GetButtonDown("Jump");
-
-        // Actualizar buffer de salto en el modelo
         playerModel.UpdateJumpBuffer(jumpPressed);
 
-        // Verificar y ejecutar salto si es posible
         if (playerModel.CanJump())
         {
             playerModel.Jump();
@@ -81,13 +67,11 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateGameplayLogic()
     {
-        // Verificar si está en el suelo
         playerModel.CheckGrounded();
     }
 
     private void UpdateVisuals()
     {
-        // Actualizar orientación del nombre del jugador
         playerView.UpdateNameLabel(playerModel.PhotonView.IsMine);
     }
 }

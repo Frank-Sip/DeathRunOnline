@@ -48,6 +48,7 @@ GameObject:
   - component: {fileID: 2169161787714951623}
   - component: {fileID: 1357956668931637226}
   - component: {fileID: 8371059747553200921}
+  - component: {fileID: 4378736643508984703}
   - component: {fileID: -9147860590131820195}
   m_Layer: 3
   m_Name: Player
@@ -205,12 +206,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41e031a84beaf6f48b14f217030243ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nameLabel: {fileID: 8780159330038191672}
   playerCamera: {fileID: 6857344850585827140}
   mouseSensitivity: 2
   mousePitchTopLimit: -30
   mousePitchLowLimit: 30
-  horizontalRotationSmoothness: 0.05
 --- !u!114 &8371059747553200921
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -234,6 +233,19 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &4378736643508984703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2122217864652082891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e09fae61f58dea4780af8b5ddcadaa6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nameLabel: {fileID: 8780159330038191672}
 --- !u!114 &-9147860590131820195
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -547,7 +559,7 @@ GameObject:
   - component: {fileID: 437501868994936387}
   - component: {fileID: 8780159330038191672}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

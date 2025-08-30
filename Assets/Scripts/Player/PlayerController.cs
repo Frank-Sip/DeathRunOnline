@@ -7,20 +7,19 @@ public class PlayerController : MonoBehaviour
 {
     private PlayerModel playerModel;
     private PlayerView playerView;
+    private PlayerNickname playerUI;
 
     private void Start()
     {
         playerModel = GetComponent<PlayerModel>();
         playerView = GetComponent<PlayerView>();
+        playerUI = GetComponent<PlayerNickname>();
 
-        if (playerModel.PhotonView.IsMine)
-        {
-            playerView.InitializeForLocalPlayer(playerModel.PhotonView.Owner.NickName);
-        }
-        else
-        {
-            playerView.InitializeForRemotePlayer(playerModel.PhotonView.Owner.NickName);
-        }
+        bool isLocalPlayer = playerModel.PhotonView.IsMine;
+        string playerName = playerModel.PhotonView.Owner.NickName;
+
+        playerView.InitializeCamera(isLocalPlayer);
+        playerUI.Initialize(playerName);
     }
 
     private void Update()
@@ -32,6 +31,7 @@ public class PlayerController : MonoBehaviour
             HandleJumpInput();
             UpdateGameplayLogic();
         }
+        
         UpdateVisuals();
     }
 
@@ -72,6 +72,6 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateVisuals()
     {
-        playerView.UpdateNameLabel(playerModel.PhotonView.IsMine);
+        playerUI.UpdateNameLabelOrientation();
     }
 }

@@ -15,11 +15,9 @@ public class PlayerNickname : MonoBehaviour
     {
         if (nameLabel == null) return;
         
-        // Buscar la cámara activa (la del jugador local en cada cliente)
         Camera activeCamera = GetLocalPlayerCamera();
         if (activeCamera != null)
         {
-            // Hacer que el label mire hacia la cámara del jugador local
             Vector3 directionToCamera = activeCamera.transform.position - nameLabel.transform.position;
             nameLabel.transform.rotation = Quaternion.LookRotation(-directionToCamera);
         }
@@ -27,7 +25,6 @@ public class PlayerNickname : MonoBehaviour
     
     private Camera GetLocalPlayerCamera()
     {
-        // Buscar el PlayerView del jugador local (el que tiene IsMine = true)
         PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
         
         foreach (PlayerModel player in allPlayers)

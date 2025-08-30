@@ -8,6 +8,8 @@ public class PlayerController : MonoBehaviour
     private PlayerModel playerModel;
     private PlayerView playerView;
     private PlayerNickname playerUI;
+    private bool cursorLocked = true;
+
 
     private void Start()
     {
@@ -20,15 +22,26 @@ public class PlayerController : MonoBehaviour
 
         playerView.InitializeCamera(isLocalPlayer);
         playerUI.Initialize(playerName);
+        
+        if (isLocalPlayer)
+        {
+            SetCursorLock(true);
+        }
     }
 
     private void Update()
     {
         if (playerModel.PhotonView.IsMine)
         {
-            HandleMovementInput();
-            HandleMouseInput();
-            HandleJumpInput();
+            HandleCursorToggle();
+            
+            if (cursorLocked)
+            {
+                HandleMovementInput();
+                HandleMouseInput();
+                HandleJumpInput();
+            }
+            
             UpdateGameplayLogic();
         }
         
@@ -62,6 +75,35 @@ public class PlayerController : MonoBehaviour
         {
             playerModel.Jump();
             playerModel.ConsumeJump();
+        }
+    }
+    
+    private void HandleCursorToggle()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            SetCursorLock(!cursorLocked);
+        }
+
+        if (!cursorLocked && Input.GetMouseButtonDown(0))
+        {
+            SetCursorLock(true);
+        }
+    }
+    
+    private void SetCursorLock(bool lockCursor)
+    {
+        cursorLocked = lockCursor;
+        
+        if (lockCursor)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
     }
 

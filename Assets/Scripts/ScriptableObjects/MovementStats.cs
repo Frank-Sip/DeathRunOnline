@@ -16,6 +16,10 @@ public class MovementStats : ScriptableObject
     [SerializeField] private float groundCheckRadius = 0.5f;
     [SerializeField] private float groundCheckDistance = 0.1f;
     
+    [Header("Push Settings")]
+    [SerializeField] private float pushForce = 10f;
+    [SerializeField] private float stunDuration = 2f;
+    
     public float MoveSpeed => moveSpeed;
     public float RotationSpeed => rotationSpeed;
     public float JumpForce => jumpForce;
@@ -23,4 +27,6 @@ public class MovementStats : ScriptableObject
     public float JumpBufferTime => jumpBufferTime;
     public float GroundCheckRadius => groundCheckRadius;
     public float GroundCheckDistance => groundCheckDistance;
+    public float PushForce => pushForce;
+    public float StunDuration => stunDuration;
 }

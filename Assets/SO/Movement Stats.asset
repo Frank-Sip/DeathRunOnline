@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b92ed7e33b28fad4c9dd855f73ddf70e, type: 3}
   m_Name: Movement Stats
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  moveSpeed: 10
   rotationSpeed: 10
   jumpForce: 8
   coyoteTime: 0.2

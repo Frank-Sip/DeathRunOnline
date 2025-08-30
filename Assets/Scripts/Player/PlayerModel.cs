@@ -2,8 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
-public class PlayerModel : MonoBehaviour
+public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable
 {
     [Header("Movement Settings")]
     [SerializeField] private MovementStats movementStats;
@@ -13,13 +14,23 @@ public class PlayerModel : MonoBehaviour
     [SerializeField] private Transform groundCheckOrigin;
     [SerializeField] private LayerMask groundMask;
     [SerializeField] private int maxGroundHits = 5;
+    
+    [Header("Interaction Settings")]
+    [SerializeField] private Transform interactionPoint;
+    [SerializeField] private float interactionRadius = 2f;
+    [SerializeField] private LayerMask interactionLayer;
 
+    private const string PLAYER_TAG_KEY = "playerTag";
+    
     private PhotonView photonView;
     private Rigidbody rb;
     private float coyoteTimeCounter;
     private float jumpBufferCounter;
     private bool isGrounded;
     private RaycastHit[] groundHits;
+    private Collider[] interactables = new Collider[5];
+    private bool isStunned = false;
+    private float stunTimer = 0f;
 
     public PhotonView PhotonView => photonView ?? GetComponent<PhotonView>();
     public bool IsGrounded => isGrounded;
@@ -33,16 +44,76 @@ public class PlayerModel : MonoBehaviour
     private float JumpBufferTime => movementStats.JumpBufferTime;
     private float GroundCheckRadius => movementStats.GroundCheckRadius;
     private float GroundCheckDistance => movementStats.GroundCheckDistance;
+    private float PushForce => movementStats.PushForce;
+    private float StunDuration => movementStats.StunDuration;
 
     private void Start()
     {
         photonView = GetComponent<PhotonView>();
         rb = GetComponent<Rigidbody>();
         groundHits = new RaycastHit[maxGroundHits];
+        
+        if (PhotonNetwork.InRoom)
+        {
+            UpdatePlayerTagFromProperties();
+        }
+    }
+    
+    private void OnEnable()
+    {
+        if (PhotonNetwork.InRoom)
+        {
+            PhotonNetwork.NetworkingClient.EventReceived += OnPlayerPropertiesUpdate;
+        }
+    }
+    
+    private void OnDisable()
+    {
+        if (PhotonNetwork.InRoom)
+        {
+            PhotonNetwork.NetworkingClient.EventReceived -= OnPlayerPropertiesUpdate;
+        }
+    }
+    
+    private void Update()
+    {
+        if (isStunned)
+        {
+            stunTimer -= Time.deltaTime;
+            if (stunTimer <= 0)
+            {
+                isStunned = false;
+            }
+        }
+    }
+    
+    public void Interact()
+    {
+        PhotonView.RPC("RPC_PushPlayer", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
+    }
+    
+    private void OnPlayerPropertiesUpdate(ExitGames.Client.Photon.EventData photonEvent)
+    {
+        if (photonEvent.Code == 253)
+        {
+            UpdatePlayerTagFromProperties();
+        }
+    }
+    
+    public void UpdatePlayerTagFromProperties()
+    {
+        if (PhotonView.Owner.CustomProperties.TryGetValue(PLAYER_TAG_KEY, out object tagValue))
+        {
+            string playerTag = tagValue.ToString();
+            PlayerNickname playerNickname = GetComponent<PlayerNickname>();
+            playerNickname.SetPlayerTag(playerTag);
+        }
     }
 
     public void Move(Vector3 moveDirection, Vector3 currentVelocity)
     {
+        if (isStunned) return;
+        
         rb.velocity = moveDirection * MoveSpeed + new Vector3(0, currentVelocity.y, 0);
 
         if (moveDirection != Vector3.zero)
@@ -73,6 +144,23 @@ public class PlayerModel : MonoBehaviour
             coyoteTimeCounter -= Time.deltaTime;
         }
     }
+    
+    public void TryInteract()
+    {
+        int elements = Physics.OverlapSphereNonAlloc(interactionPoint.position, interactionRadius, interactables, interactionLayer);
+
+        for (int i = 0; i < elements; i++)
+        {
+            var interactable = interactables[i];
+            var interactableComponent = interactable.GetComponent<IInteractable>();
+
+            if (interactableComponent != null)
+            {
+                interactableComponent.Interact();
+                return;
+            }
+        }
+    }
 
     public void UpdateJumpBuffer(bool jumpPressed)
     {
@@ -96,6 +184,15 @@ public class PlayerModel : MonoBehaviour
         jumpBufferCounter = 0;
         coyoteTimeCounter = 0;
     }
+    
+    public void ChangePlayerTag(string newTag)
+    {
+        PlayerNickname playerNickname = GetComponent<PlayerNickname>();
+        if (playerNickname != null)
+        {
+            playerNickname.SetPlayerTag(newTag);
+        }
+    }
 
     public Vector3 GetRigidbodyVelocity()
     {
@@ -117,6 +214,39 @@ public class PlayerModel : MonoBehaviour
     {
         Debug.Log($"{playerName} has collided with an object.");
     }
+    
+    [PunRPC]
+    public void RPC_PushPlayer(int pusherActorNumber)
+    {
+        if (!PhotonView.IsMine) return;
+
+        var pusherPlayer = PhotonNetwork.CurrentRoom.GetPlayer(pusherActorNumber);
+        if (pusherPlayer == null) return;
+
+        PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
+        PlayerModel pusher = null;
+
+        foreach (PlayerModel player in allPlayers)
+        {
+            if (player.PhotonView.Owner.ActorNumber == pusherActorNumber)
+            {
+                pusher = player;
+                break;
+            }
+        }
+
+        if (pusher == null) return;
+
+        Vector3 pushDirection = (transform.position - pusher.transform.position).normalized;
+        pushDirection.y = 0;
+
+        rb.AddForce(pushDirection * PushForce, ForceMode.Impulse);
+
+        isStunned = true;
+        stunTimer = StunDuration;
+
+        Debug.Log($"{PhotonNetwork.LocalPlayer.NickName} was pushed by {pusher.PhotonView.Owner.NickName}");
+    }
 
     [ContextMenu("GetID")]
     public void PrintID()
@@ -124,14 +254,31 @@ public class PlayerModel : MonoBehaviour
         print(PhotonView.ViewID);
         print(PhotonNetwork.NickName);
     }
-
+    
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.IsWriting)
+        {
+            stream.SendNext(transform.position);
+            stream.SendNext(transform.rotation);
+            stream.SendNext(rb.velocity);
+        }
+        else
+        {
+            transform.position = (Vector3)stream.ReceiveNext();
+            transform.rotation = (Quaternion)stream.ReceiveNext();
+            rb.velocity = (Vector3)stream.ReceiveNext();
+        }
+    }
+    
     private void OnDrawGizmos()
     {
-        if (groundCheckOrigin != null)
-        {
-            Gizmos.color = Color.blue;
-            Vector3 sphereCenter = groundCheckOrigin.position;
-            Gizmos.DrawWireSphere(sphereCenter, GroundCheckRadius);
-        }
+        Gizmos.color = Color.blue;
+        Vector3 sphereCenter = groundCheckOrigin.position;
+        Gizmos.DrawWireSphere(sphereCenter, GroundCheckRadius);
+        
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(interactionPoint.position, interactionRadius);
+        
     }
 }

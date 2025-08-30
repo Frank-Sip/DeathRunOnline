@@ -42,6 +42,7 @@ MonoBehaviour:
   - RPC_InformCollision
   - RPC_SetNickname
   - RPC_UpdateSpawnIndex
+  - RPC_PushPlayer
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

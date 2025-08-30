@@ -6,9 +6,41 @@ public class PlayerNickname : MonoBehaviour
     [Header("UI Elements")]
     [SerializeField] private TMP_Text nameLabel;
     
+    [Header("Configuration")]
+    [SerializeField] private PlayerLabelConfig labelConfig;
+    
+    private string currentTag;
+    private string playerName;
+    
     public void Initialize(string playerName)
     {
-        nameLabel.text = playerName;
+        this.playerName = playerName;
+        UpdateNameLabel();
+    }
+    
+    public void SetPlayerTag(string newTag)
+    {
+        currentTag = newTag;
+        UpdateNameLabel();
+    }
+    
+    private void UpdateNameLabel()
+    {
+        if (nameLabel == null || labelConfig == null) return;
+        
+        var tagConfig = labelConfig.GetTagConfig(currentTag);
+        
+        if (tagConfig != null)
+        {
+            string tagColorHex = ColorUtility.ToHtmlStringRGB(tagConfig.tagColor);
+            string nicknameColorHex = ColorUtility.ToHtmlStringRGB(labelConfig.nicknameColor);
+            
+            nameLabel.text = $"<color=#{tagColorHex}>{tagConfig.tagName}</color> <color=#{nicknameColorHex}>{playerName}</color>";
+        }
+        else
+        {
+            nameLabel.text = playerName;
+        }
     }
     
     public void UpdateNameLabelOrientation()

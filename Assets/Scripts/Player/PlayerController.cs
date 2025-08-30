@@ -39,6 +39,7 @@ public class PlayerController : MonoBehaviour
             {
                 HandleMovementInput();
                 HandleJumpInput();
+                TryInteract();
             }
             
             UpdateGameplayLogic();
@@ -56,6 +57,14 @@ public class PlayerController : MonoBehaviour
         Vector3 right = playerView.GetCameraRight();
         Vector3 moveDirection = (forward * vertical + right * horizontal).normalized;
         playerModel.Move(moveDirection, playerModel.GetRigidbodyVelocity());
+    }
+    
+    private void TryInteract()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            playerModel.TryInteract();
+        }
     }
 
     private void HandleJumpInput()

@@ -18,10 +18,10 @@ public class PlayerController : MonoBehaviour
         playerUI = GetComponent<PlayerNickname>();
 
         bool isLocalPlayer = playerModel.PhotonView.IsMine;
-        //string playerName = playerModel.PhotonView.Owner.NickName;
+        string playerName = playerModel.PhotonView.Owner.NickName;
 
         playerView.InitializeCamera(isLocalPlayer);
-      //  playerUI.Initialize(playerName);
+        playerUI.Initialize(playerName);
         
         if (isLocalPlayer)
         {

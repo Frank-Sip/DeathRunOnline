@@ -6,17 +6,11 @@ using UnityEngine;
 public class PlayerModel : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float rotationSpeed = 10f;
+    [SerializeField] private MovementStats movementStats;
     [SerializeField] private LayerMask collisionMask;
 
-    [Header("Jump Settings")]
-    [SerializeField] private float jumpForce = 8f;
-    [SerializeField] private float coyoteTime = 0.2f;
-    [SerializeField] private float jumpBufferTime = 0.2f;
+    [Header("Ground / Jump Settings")]
     [SerializeField] private Transform groundCheckOrigin;
-    [SerializeField] private float groundCheckRadius = 0.5f;
-    [SerializeField] private float groundCheckDistance = 0.1f;
     [SerializeField] private LayerMask groundMask;
     [SerializeField] private int maxGroundHits = 5;
 
@@ -32,6 +26,14 @@ public class PlayerModel : MonoBehaviour
     public float CoyoteTimeCounter => coyoteTimeCounter;
     public float JumpBufferCounter => jumpBufferCounter;
 
+    private float MoveSpeed => movementStats.MoveSpeed;
+    private float RotationSpeed => movementStats.RotationSpeed;
+    private float JumpForce => movementStats.JumpForce;
+    private float CoyoteTime => movementStats.CoyoteTime;
+    private float JumpBufferTime => movementStats.JumpBufferTime;
+    private float GroundCheckRadius => movementStats.GroundCheckRadius;
+    private float GroundCheckDistance => movementStats.GroundCheckDistance;
+
     private void Start()
     {
         photonView = GetComponent<PhotonView>();
@@ -41,30 +43,30 @@ public class PlayerModel : MonoBehaviour
 
     public void Move(Vector3 moveDirection, Vector3 currentVelocity)
     {
-        rb.velocity = moveDirection * moveSpeed + new Vector3(0, currentVelocity.y, 0);
-        
+        rb.velocity = moveDirection * MoveSpeed + new Vector3(0, currentVelocity.y, 0);
+
         if (moveDirection != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
         }
     }
 
     public void Jump()
     {
-        rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
+        rb.velocity = new Vector3(rb.velocity.x, JumpForce, rb.velocity.z);
     }
 
     public void CheckGrounded()
     {
         Vector3 sphereCenter = groundCheckOrigin != null ? groundCheckOrigin.position : transform.position + Vector3.up * 0.1f;
-        int hitCount = Physics.SphereCastNonAlloc(sphereCenter, groundCheckRadius, Vector3.down, groundHits, groundCheckDistance, groundMask);
+        int hitCount = Physics.SphereCastNonAlloc(sphereCenter, GroundCheckRadius, Vector3.down, groundHits, GroundCheckDistance, groundMask);
 
         isGrounded = hitCount > 0;
 
         if (isGrounded)
         {
-            coyoteTimeCounter = coyoteTime;
+            coyoteTimeCounter = CoyoteTime;
         }
         else
         {
@@ -76,7 +78,7 @@ public class PlayerModel : MonoBehaviour
     {
         if (jumpPressed)
         {
-            jumpBufferCounter = jumpBufferTime;
+            jumpBufferCounter = JumpBufferTime;
         }
         else
         {
@@ -129,7 +131,7 @@ public class PlayerModel : MonoBehaviour
         {
             Gizmos.color = Color.blue;
             Vector3 sphereCenter = groundCheckOrigin.position;
-            Gizmos.DrawWireSphere(sphereCenter, groundCheckRadius);
+            Gizmos.DrawWireSphere(sphereCenter, GroundCheckRadius);
         }
     }
 }

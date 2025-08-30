@@ -11,21 +11,12 @@ public class PlayerView : MonoBehaviour
     [SerializeField] private float mousePitchLowLimit = 80f;
 
     private float cameraPitch;
-
-    public float MouseSensitivity => mouseSensitivity;
+    
     public Camera PlayerCamera => playerCamera;
 
     public void InitializeCamera(bool isLocalPlayer)
     {
         playerCamera.enabled = isLocalPlayer;
-    }
-
-    public void UpdateMouseLook(float mouseX, float mouseY)
-    {
-        transform.Rotate(Vector3.up * mouseX);
-        cameraPitch -= mouseY;
-        cameraPitch = Mathf.Clamp(cameraPitch, mousePitchTopLimit, mousePitchLowLimit);
-        playerCamera.transform.localRotation = Quaternion.Euler(cameraPitch, 0f, 0f);
     }
 
     public Vector3 GetCameraForward()

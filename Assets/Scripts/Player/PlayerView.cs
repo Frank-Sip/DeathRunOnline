@@ -18,10 +18,6 @@ public class PlayerView : MonoBehaviour
     public void InitializeCamera(bool isLocalPlayer)
     {
         playerCamera.enabled = isLocalPlayer;
-        if (isLocalPlayer)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-        }
     }
 
     public void UpdateMouseLook(float mouseX, float mouseY)

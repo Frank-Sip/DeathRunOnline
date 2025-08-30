@@ -7,6 +7,7 @@ public class PlayerModel : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float rotationSpeed = 10f;
     [SerializeField] private LayerMask collisionMask;
 
     [Header("Jump Settings")]
@@ -41,6 +42,12 @@ public class PlayerModel : MonoBehaviour
     public void Move(Vector3 moveDirection, Vector3 currentVelocity)
     {
         rb.velocity = moveDirection * moveSpeed + new Vector3(0, currentVelocity.y, 0);
+        
+        if (moveDirection != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+        }
     }
 
     public void Jump()

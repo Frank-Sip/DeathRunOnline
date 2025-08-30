@@ -18,10 +18,10 @@ public class PlayerController : MonoBehaviour
         playerUI = GetComponent<PlayerNickname>();
 
         bool isLocalPlayer = playerModel.PhotonView.IsMine;
-        string playerName = playerModel.PhotonView.Owner.NickName;
+        //string playerName = playerModel.PhotonView.Owner.NickName;
 
         playerView.InitializeCamera(isLocalPlayer);
-        playerUI.Initialize(playerName);
+      //  playerUI.Initialize(playerName);
         
         if (isLocalPlayer)
         {
@@ -38,7 +38,6 @@ public class PlayerController : MonoBehaviour
             if (cursorLocked)
             {
                 HandleMovementInput();
-                HandleMouseInput();
                 HandleJumpInput();
             }
             
@@ -57,13 +56,6 @@ public class PlayerController : MonoBehaviour
         Vector3 right = playerView.GetCameraRight();
         Vector3 moveDirection = (forward * vertical + right * horizontal).normalized;
         playerModel.Move(moveDirection, playerModel.GetRigidbodyVelocity());
-    }
-
-    private void HandleMouseInput()
-    {
-        float mouseX = Input.GetAxis("Mouse X") * playerView.MouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * playerView.MouseSensitivity;
-        playerView.UpdateMouseLook(mouseX, mouseY);
     }
 
     private void HandleJumpInput()

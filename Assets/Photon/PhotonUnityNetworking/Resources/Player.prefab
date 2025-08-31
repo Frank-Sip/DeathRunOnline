@@ -540,6 +540,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerCamera: {fileID: 6857344850585827140}
+  freeLookCamera: {fileID: 5051445083703551671}
+  cinemachineBrain: {fileID: 3787083795721704023}
   mouseSensitivity: 2
   mousePitchTopLimit: -30
   mousePitchLowLimit: 30

@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using Photon.Pun;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
@@ -9,7 +6,6 @@ public class PlayerController : MonoBehaviour
     private PlayerView playerView;
     private PlayerNickname playerUI;
     private bool cursorLocked = true;
-
 
     private void Start()
     {
@@ -20,9 +16,8 @@ public class PlayerController : MonoBehaviour
         bool isLocalPlayer = playerModel.PhotonView.IsMine;
         string playerName = playerModel.PhotonView.Owner.NickName;
 
-        playerView.InitializeCamera(isLocalPlayer);
         playerUI.Initialize(playerName);
-        
+
         if (isLocalPlayer)
         {
             SetCursorLock(true);
@@ -35,33 +30,31 @@ public class PlayerController : MonoBehaviour
         {
             HandleCursorToggle();
             HandleTabVisibility();
-            
+
             if (cursorLocked)
             {
                 HandleMovementInput();
                 HandleJumpInput();
                 TryInteract();
             }
-            
             UpdateGameplayLogic();
         }
-        
+
         UpdateVisuals();
     }
-    
+
     private void HandleTabVisibility()
     {
         bool tabPressed = Input.GetKey(playerModel.seeTagKey);
-    
         PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
-    
+
         foreach (PlayerModel player in allPlayers)
         {
             PlayerNickname playerNickname = player.GetComponent<PlayerNickname>();
             playerNickname.SetVisibility(tabPressed);
         }
     }
-    
+
     private void HandleMovementInput()
     {
         float horizontal = Input.GetAxis("Horizontal");
@@ -70,9 +63,10 @@ public class PlayerController : MonoBehaviour
         Vector3 forward = playerView.GetCameraForward();
         Vector3 right = playerView.GetCameraRight();
         Vector3 moveDirection = (forward * vertical + right * horizontal).normalized;
+
         playerModel.Move(moveDirection, playerModel.GetRigidbodyVelocity());
     }
-    
+
     private void TryInteract()
     {
         if (Input.GetMouseButtonDown(0))
@@ -92,7 +86,7 @@ public class PlayerController : MonoBehaviour
             playerModel.ConsumeJump();
         }
     }
-    
+
     private void HandleCursorToggle()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -105,11 +99,11 @@ public class PlayerController : MonoBehaviour
             SetCursorLock(true);
         }
     }
-    
+
     private void SetCursorLock(bool lockCursor)
     {
         cursorLocked = lockCursor;
-        
+
         if (lockCursor)
         {
             Cursor.lockState = CursorLockMode.Locked;

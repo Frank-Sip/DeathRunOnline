@@ -1,171 +1,157 @@
-using Photon.Pun;
-using Photon.Realtime;
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+//using Photon.Pun;
+//using Photon.Realtime;
+//using System.Collections;
+//using System.Collections.Generic;
+//using TMPro;
+//using UnityEngine;
+//using UnityEngine.SceneManagement;
+//using UnityEngine.UI;
 
-public class MainMenuLauncher : MonoBehaviourPunCallbacks
-{
+//public class MainMenuLauncher : MonoBehaviourPunCallbacks
+//{
+//    [Header("Menu Splash Screen Config")]
+//    [SerializeField] private string gameSceneName;
+//    [SerializeField] private TMP_InputField InputField;
+//    [SerializeField] private Button connectionButton;
+//    [SerializeField] private Button[] skinButtons;
+//    [SerializeField] private Image skinPreview;
 
-    [Header("Menu Splash Screen Config")]
-    [SerializeField] private string gameSceneName;
-    [SerializeField] private TMP_InputField InputField;
-    [SerializeField] private Button connectionButton;
-    [SerializeField] private Button[] skinButtons;
-    [SerializeField] private Image skinPreview;
 
-    [Header("Canvas References")]
-    [SerializeField] private GameObject mainMenuCanvas;
-    [SerializeField] private GameObject lobbyPanel;
 
-    [Header("Skin Configuration")]
-    [SerializeField] private PlayerSkinConfig skinConfig;
-    private const string nickNameKey = "playerNickname";
-    private const string skinKey = "playerSkin";
-    private string nickname;
-    private int selectedSkinIndex = 0;
+//    [Header("Skin Configuration")]
+//    [SerializeField] private PlayerSkinConfig skinConfig;
+//    private const string nickNameKey = "playerNickname";
+//    private const string skinKey = "playerSkin";
+//    private string nickname;
+//    private int selectedSkinIndex = 0;
 
-    [Header("Lobby UI")]
-    [SerializeField] private TMP_InputField roomNameInput;
+//    [Header("Lobby UI")]
+//    [SerializeField] private TMP_InputField roomNameInput;
 
-    private void Start()
-    {
-        connectionButton.onClick.AddListener(HandleConnectButton);
-        InputField.onSubmit.AddListener(OnInputSubmit);
-        InputField.onValueChanged.AddListener(VerifyName);
+//    private void Start()
+//    {
+//        connectionButton.onClick.AddListener(HandleConnectButton);
+//        InputField.onSubmit.AddListener(OnInputSubmit);
+//        InputField.onValueChanged.AddListener(VerifyName);
 
-        SetupSkinButtons();
-        SelectSkin(0);
-        VerifyName(InputField.text);
+//        SetupSkinButtons();
+//        SelectSkin(0);
+//        VerifyName(InputField.text);
 
-        mainMenuCanvas.SetActive(true);
-        lobbyPanel.SetActive(false);
-    }
+//        mainMenuCanvas.SetActive(true);
+//        lobbyPanel.SetActive(false);
+//    }
+//    private void VerifyName(string name)
+//    {
+//        connectionButton.interactable = !string.IsNullOrWhiteSpace(name);
+//        nickname = name;
+//    }
+//    private void SetupSkinButtons()
+//    {
+//        if (skinConfig == null) return;
 
-    private void VerifyName(string name)
-    {
-        connectionButton.interactable = !string.IsNullOrWhiteSpace(name);
-        nickname = name;
-    }
+//        int skinCount = skinConfig.GetSkinCount();
 
-    private void SetupSkinButtons()
-    {
-        if (skinConfig == null) return;
+//        for (int i = 0; i < skinButtons.Length && i < skinCount; i++)
+//        {
+//            int index = i;
+//            skinButtons[i].onClick.AddListener(() => SelectSkin(index));
 
-        int skinCount = skinConfig.GetSkinCount();
+//            var skinData = skinConfig.GetSkinData(i);
+//            if (skinData.skinIcon != null)
+//            {
+//                Image buttonImage = skinButtons[i].GetComponent<Image>();
+//                buttonImage.sprite = skinData.skinIcon;
+//            }
 
-        for (int i = 0; i < skinButtons.Length && i < skinCount; i++)
-        {
-            int index = i;
-            skinButtons[i].onClick.AddListener(() => SelectSkin(index));
+//            skinButtons[i].gameObject.SetActive(true);
+//        }
 
-            var skinData = skinConfig.GetSkinData(i);
-            if (skinData.skinIcon != null)
-            {
-                Image buttonImage = skinButtons[i].GetComponent<Image>();
-                buttonImage.sprite = skinData.skinIcon;
-            }
+//        for (int i = skinCount; i < skinButtons.Length; i++)
+//        {
+//            skinButtons[i].gameObject.SetActive(false);
+//        }
+//    }
+//    private void SelectSkin(int skinIndex)
+//    {
+//        if (skinConfig == null) return;
 
-            skinButtons[i].gameObject.SetActive(true);
-        }
+//        selectedSkinIndex = skinIndex;
 
-        for (int i = skinCount; i < skinButtons.Length; i++)
-        {
-            skinButtons[i].gameObject.SetActive(false);
-        }
-    }
+//        var skinData = skinConfig.GetSkinData(skinIndex);
+//        if (skinData.skinIcon != null)
+//        {
+//            skinPreview.sprite = skinData.skinIcon;
+//        }
 
-    private void SelectSkin(int skinIndex)
-    {
-        if (skinConfig == null) return;
+//        for (int i = 0; i < skinButtons.Length; i++)
+//        {
+//            skinButtons[i].interactable = i != skinIndex;
+//        }
+//    }
+//    private void HandleConnectButton()
+//    {
+//        PlayerPrefs.SetString(nickNameKey, nickname);
 
-        selectedSkinIndex = skinIndex;
+//        PhotonNetwork.NickName = nickname;
 
-        var skinData = skinConfig.GetSkinData(skinIndex);
-        if (skinData.skinIcon != null)
-        {
-            skinPreview.sprite = skinData.skinIcon;
-        }
+//        var customProperties = new ExitGames.Client.Photon.Hashtable();
+//        customProperties[skinKey] = selectedSkinIndex;
+//        PhotonNetwork.LocalPlayer.SetCustomProperties(customProperties);
 
-        for (int i = 0; i < skinButtons.Length; i++)
-        {
-            skinButtons[i].interactable = i != skinIndex;
-        }
-    }
+//        //Debug.Log(nickname + " is trying to connect to the master");
 
-    private void HandleConnectButton()
-    {
-        PlayerPrefs.SetString(nickNameKey, nickname);
+//        //PhotonNetwork.ConnectUsingSettings();
+//        connectionButton.interactable = false;
 
-        PhotonNetwork.NickName = nickname;
+//        mainMenuCanvas.SetActive(false);
+//    }
+//    private void OnInputSubmit(string name)
+//    {
+//        if (connectionButton.interactable)
+//        {
+//            HandleConnectButton();
+//        }
+//    }
+//    public override void OnConnectedToMaster()
+//    {
+//        Debug.Log(nickname + " connected to master");
+//        PhotonNetwork.JoinLobby();
+//    }
+//    public override void OnJoinedLobby()
+//    {
+//        Debug.Log("Enter lobby");
+//        lobbyPanel.SetActive(true);
+//    }
+//    // ==== Lobby Actions ====
+//    public void CreateRoom()
+//    {
+//        string roomName = string.IsNullOrEmpty(roomNameInput.text) ? "Room:" + Random.Range(0, 1000) : roomNameInput.text;
+//        RoomOptions options = new RoomOptions { MaxPlayers = 4 };
+//        PhotonNetwork.CreateRoom(roomName, options);
+//    }
+//    public void JoinRoomByName()
+//    {
+//        if (!string.IsNullOrEmpty(roomNameInput.text))
+//        {
+//            PhotonNetwork.JoinRoom(roomNameInput.text);
+//        }
+//    }
+//    public void JoinRandomRoom()
+//    {
+//        PhotonNetwork.JoinRandomRoom();
+//    }
 
-        var customProperties = new ExitGames.Client.Photon.Hashtable();
-        customProperties[skinKey] = selectedSkinIndex;
-        PhotonNetwork.LocalPlayer.SetCustomProperties(customProperties);
+//    public override void OnJoinRandomFailed(short returnCode, string message)
+//    {
+//        Debug.Log("No rooms, Creating room");
+//        RoomOptions options = new RoomOptions { MaxPlayers = 4 };
+//        PhotonNetwork.CreateRoom("Random Room" + Random.Range(0, 1000), options);
+//    }
 
-        Debug.Log(nickname + " is trying to connect to the master");
-
-        PhotonNetwork.ConnectUsingSettings();
-        connectionButton.interactable = false;
-
-        mainMenuCanvas.SetActive(false);
-    }
-
-    private void OnInputSubmit(string name)
-    {
-        if (connectionButton.interactable)
-        {
-            HandleConnectButton();
-        }
-    }
-
-    public override void OnConnectedToMaster()
-    {
-        Debug.Log(nickname + " connected to master");
-        PhotonNetwork.JoinLobby();
-    }
-
-    public override void OnJoinedLobby()
-    {
-        Debug.Log("Enter lobby");
-        lobbyPanel.SetActive(true);
-    }
-
-    // ==== Lobby Actions ====
-
-    public void CreateRoom()
-    {
-        string roomName = string.IsNullOrEmpty(roomNameInput.text) ? "Room:" + Random.Range(0, 1000) : roomNameInput.text;
-        RoomOptions options = new RoomOptions { MaxPlayers = 4 };
-        PhotonNetwork.CreateRoom(roomName, options);
-    }
-
-    public void JoinRoomByName()
-    {
-        if (!string.IsNullOrEmpty(roomNameInput.text))
-        {
-            PhotonNetwork.JoinRoom(roomNameInput.text);
-        }
-    }
-
-    public void JoinRandomRoom()
-    {
-        PhotonNetwork.JoinRandomRoom();
-    }
-
-    public override void OnJoinRandomFailed(short returnCode, string message)
-    {
-        Debug.Log("No rooms, Creating room");
-        RoomOptions options = new RoomOptions { MaxPlayers = 4 };
-        PhotonNetwork.CreateRoom("Random Room" + Random.Range(0, 1000), options);
-    }
-
-    public override void OnJoinedRoom()
-    {
-        Debug.Log("Joined Room: " + PhotonNetwork.CurrentRoom.Name);
-        SceneManager.LoadScene(gameSceneName);
-    }
-}
+//    public override void OnJoinedRoom()
+//    {
+//        Debug.Log("Joined Room: " + PhotonNetwork.CurrentRoom.Name);
+//        SceneManager.LoadScene(gameSceneName);
+//    }
+//}

@@ -19,3 +19,5 @@ MonoBehaviour:
   jumpBufferTime: 0.2
   groundCheckRadius: 0.5
   groundCheckDistance: 0.1
+  pushForce: 10
+  stunDuration: 1

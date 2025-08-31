@@ -34,6 +34,7 @@ public class PlayerController : MonoBehaviour
         if (playerModel.PhotonView.IsMine)
         {
             HandleCursorToggle();
+            HandleTabVisibility();
             
             if (cursorLocked)
             {
@@ -47,7 +48,20 @@ public class PlayerController : MonoBehaviour
         
         UpdateVisuals();
     }
-
+    
+    private void HandleTabVisibility()
+    {
+        bool tabPressed = Input.GetKey(playerModel.seeTagKey);
+    
+        PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
+    
+        foreach (PlayerModel player in allPlayers)
+        {
+            PlayerNickname playerNickname = player.GetComponent<PlayerNickname>();
+            playerNickname.SetVisibility(tabPressed);
+        }
+    }
+    
     private void HandleMovementInput()
     {
         float horizontal = Input.GetAxis("Horizontal");

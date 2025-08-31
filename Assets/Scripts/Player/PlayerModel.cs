@@ -20,6 +20,9 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable
     [SerializeField] private float interactionRadius = 2f;
     [SerializeField] private LayerMask interactionLayer;
 
+    [Header("See Player Tags")]
+    public KeyCode seeTagKey = KeyCode.Tab;
+
     private const string PLAYER_TAG_KEY = "playerTag";
     
     private PhotonView photonView;

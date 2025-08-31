@@ -11,11 +11,19 @@ public class PlayerNickname : MonoBehaviour
     
     private string currentTag;
     private string playerName;
+    private bool isVisible = false;
     
     public void Initialize(string playerName)
     {
         this.playerName = playerName;
         UpdateNameLabel();
+        SetVisibility(false);
+    }
+    
+    public void SetVisibility(bool visible)
+    {
+        isVisible = visible;
+        nameLabel.gameObject.SetActive(visible);
     }
     
     public void SetPlayerTag(string newTag)
@@ -26,26 +34,24 @@ public class PlayerNickname : MonoBehaviour
     
     private void UpdateNameLabel()
     {
-        if (nameLabel == null || labelConfig == null) return;
-        
         var tagConfig = labelConfig.GetTagConfig(currentTag);
-        
+
         if (tagConfig != null)
         {
             string tagColorHex = ColorUtility.ToHtmlStringRGB(tagConfig.tagColor);
             string nicknameColorHex = ColorUtility.ToHtmlStringRGB(labelConfig.nicknameColor);
-            
+
             nameLabel.text = $"<color=#{tagColorHex}>{tagConfig.tagName}</color> <color=#{nicknameColorHex}>{playerName}</color>";
         }
         else
         {
-            nameLabel.text = playerName;
+            nameLabel.text = $"<color=#FFFFFF>{playerName}</color>";
         }
     }
     
     public void UpdateNameLabelOrientation()
     {
-        if (nameLabel == null) return;
+        if (nameLabel == null || !isVisible) return;
         
         Camera activeCamera = GetLocalPlayerCamera();
         if (activeCamera != null)

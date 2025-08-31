@@ -760,7 +760,6 @@ GameObject:
   - component: {fileID: 1511181140}
   - component: {fileID: 1511181139}
   - component: {fileID: 1511181138}
-  - component: {fileID: 1511181137}
   - component: {fileID: 1511181136}
   m_Layer: 7
   m_Name: TrapButton
@@ -782,19 +781,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   trapObject: {fileID: 1392005010}
---- !u!114 &1511181137
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1511181135}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9021d35b28cefe84b8cd1d5bbea691de, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameTagManager: {fileID: 170487383}
 --- !u!136 &1511181138
 CapsuleCollider:
   m_ObjectHideFlags: 0

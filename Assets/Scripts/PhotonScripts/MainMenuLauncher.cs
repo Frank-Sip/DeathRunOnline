@@ -111,7 +111,6 @@ public class MainMenuLauncher : MonoBehaviourPunCallbacks
         PhotonNetwork.ConnectUsingSettings();
         connectionButton.interactable = false;
 
-        // ocultar menu inicial mientras conecta
         mainMenuCanvas.SetActive(false);
     }
 

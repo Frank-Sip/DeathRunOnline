@@ -51,7 +51,26 @@ public class PlayerView : MonoBehaviour
 
     public void InitializeCamera(bool isLocalPlayer)
     {
-        playerCamera.enabled = isLocalPlayer;
+        if (isLocalPlayer)
+        {
+            Camera[] allCameras = FindObjectsOfType<Camera>();
+            foreach (Camera cam in allCameras)
+            {
+                if (cam != playerCamera)
+                {
+                    cam.enabled = false;
+                    cam.gameObject.SetActive(false);
+                }
+            }
+
+            playerCamera.enabled = true;
+            playerCamera.gameObject.SetActive(true);
+        }
+        else
+        {
+            playerCamera.enabled = false;
+            playerCamera.gameObject.SetActive(false);
+        }
     }
 
     private void OnPlayerPropertiesUpdate(ExitGames.Client.Photon.EventData photonEvent)
@@ -64,24 +83,7 @@ public class PlayerView : MonoBehaviour
 
     public void ApplySkinFromProperties()
     {
-        if (skinConfig == null)
-        {
-            Debug.LogError($"PlayerSkinConfig NOT ASSIGNED on {gameObject.name}! Please assign it in the Inspector.");
-            return;
-        }
-
-        if (photonView == null)
-        {
-            Debug.LogError($"PhotonView not found on {gameObject.name}");
-            return;
-        }
-
-        if (photonView.Owner == null)
-        {
-            Debug.LogError($"PhotonView.Owner is null on {gameObject.name}");
-            return;
-        }
-
+        
         if (photonView.Owner.CustomProperties.TryGetValue(SKIN_KEY, out object skinValue))
         {
             int skinIndex = (int)skinValue;
@@ -97,18 +99,6 @@ public class PlayerView : MonoBehaviour
 
     private void ApplySkin(int skinIndex)
     {
-        if (skinConfig == null)
-        {
-            Debug.LogError("skinConfig is null in ApplySkin");
-            return;
-        }
-
-        if (modelParent == null)
-        {
-            Debug.LogError("modelParent is null in ApplySkin");
-            return;
-        }
-
         GameObject skinModel = skinConfig.GetSkinModel(skinIndex);
         if (skinModel != null)
         {
@@ -122,11 +112,6 @@ public class PlayerView : MonoBehaviour
             currentModel.transform.localRotation = Quaternion.identity;
 
             currentSkinIndex = skinIndex;
-            Debug.Log($"Successfully applied skin {skinIndex}: {skinModel.name}");
-        }
-        else
-        {
-            Debug.LogError($"Skin model is null for index {skinIndex}");
         }
     }
 

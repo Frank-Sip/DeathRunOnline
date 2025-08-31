@@ -43,6 +43,8 @@ MonoBehaviour:
   - RPC_SetNickname
   - RPC_UpdateSpawnIndex
   - RPC_PushPlayer
+  - ForceVisibilitySync
+  - SyncAllPlayers
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

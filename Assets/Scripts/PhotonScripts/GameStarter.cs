@@ -20,7 +20,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
     private IEnumerator CheckRoomStatus()
     {
         yield return null; 
-        
+
         if (PhotonNetwork.InRoom && !hasSpawned)
         {
             SpawnPlayer();
@@ -44,7 +44,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
     private void SpawnPlayer()
     {
         if (hasSpawned) return;
-        
+
         hasSpawned = true;
         Transform spawn = GetPlayerSpawnPosition();
         PhotonNetwork.Instantiate(playerPrefab.name, spawn.position, spawn.rotation, 0);

@@ -4,8 +4,9 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine;
 using Photon.Realtime;
+using Photon.Pun;
 
-public class UIManager : MonoBehaviour
+public class UIManager : MonoBehaviourPunCallbacks
 {
     public static UIManager Instance;
 
@@ -36,7 +37,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Image skinPreview;
     [SerializeField] private PlayerSkinConfig skinConfig;
 
-
     private const string nickNameKey = "playerNickname";
     private const string skinKey = "playerSkin";
 
@@ -47,19 +47,46 @@ public class UIManager : MonoBehaviour
     private void Awake()
     {
         if (Instance == null)
+        {
             Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
         else
+        {
             Destroy(gameObject);
+            return;
+        }
     }
 
     private void Start()
+    {
+        string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        Debug.Log($"UIManager Start in scene: {currentScene}");
+
+        if (IsMenuScene())
+        {
+            InitializeMenuUI();
+        }
+        else
+        {
+            if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
+            if (lobbyPanel != null) lobbyPanel.SetActive(false);
+        }
+    }
+
+    private bool IsMenuScene()
+    {
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        return sceneName == "MainMenu" || sceneName == "Menu" || sceneName == "Lobby";
+    }
+
+    private void InitializeMenuUI()
     {
         InitializeUI();
         SetupButtons();
         SetupSkinButtons();
         SelectSkin(0);
 
-        // Load saved nickname if exists
         if (PlayerPrefs.HasKey(nickNameKey))
         {
             nameInput.text = PlayerPrefs.GetString(nickNameKey);
@@ -69,17 +96,22 @@ public class UIManager : MonoBehaviour
         VerifyName(nameInput.text);
     }
 
+    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
+    {
+        Debug.Log("Room properties updated");
+    }
+
     private void InitializeUI()
     {
-        mainMenuCanvas.SetActive(true);
-        lobbyPanel.SetActive(false);
+        if (mainMenuCanvas != null) mainMenuCanvas.SetActive(true);
+        if (lobbyPanel != null) lobbyPanel.SetActive(false);
     }
 
     private void SetupButtons()
     {
-        connectionButton.onClick.AddListener(OnConnectButton);
-        continueButton.onClick.AddListener(OnContinueButton);
-        nameInput.onValueChanged.AddListener(VerifyName);
+        if (connectionButton != null) connectionButton.onClick.AddListener(OnConnectButton);
+        if (continueButton != null) continueButton.onClick.AddListener(OnContinueButton);
+        if (nameInput != null) nameInput.onValueChanged.AddListener(VerifyName);
 
         if (createRoomButton != null)
             createRoomButton.onClick.AddListener(OnCreateRoomButton);
@@ -94,8 +126,8 @@ public class UIManager : MonoBehaviour
     private void VerifyName(string name)
     {
         bool isValid = !string.IsNullOrWhiteSpace(name) && name.Length >= 3;
-        connectionButton.interactable = isValid;
-        continueButton.interactable = isValid;
+        if (connectionButton != null) connectionButton.interactable = isValid;
+        if (continueButton != null) continueButton.interactable = isValid;
 
         if (isValid)
             nickname = name;
@@ -169,20 +201,30 @@ public class UIManager : MonoBehaviour
 
     private void ConnectToPhoton()
     {
-        connectionButton.interactable = false;
-        continueButton.interactable = false;
-        mainMenuCanvas.SetActive(false);
+        if (connectionButton != null) connectionButton.interactable = false;
+        if (continueButton != null) continueButton.interactable = false;
+        if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
 
         PhotonManager.Instance.ConnectToPhoton(nickname, selectedSkinIndex);
     }
 
     public void ShowLobbyPanel()
     {
-        lobbyPanel.SetActive(true);
-        mainMenuCanvas.SetActive(false);
+        if (!IsMenuScene()) return;
+
+        if (lobbyPanel != null) lobbyPanel.SetActive(true);
+        if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
         UpdateRoomListUI();
     }
 
+    public void OnSceneChanged()
+    {
+        if (!IsMenuScene())
+        {
+            if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
+            if (lobbyPanel != null) lobbyPanel.SetActive(false);
+        }
+    }
     public void OnCreateRoomButton()
     {
         string roomName = roomNameInput.text;
@@ -212,6 +254,8 @@ public class UIManager : MonoBehaviour
 
     public void UpdateRoomList(List<RoomInfo> roomList)
     {
+        if (!IsMenuScene()) return; 
+
         ClearRoomList();
         int totalPlayers = 0;
 

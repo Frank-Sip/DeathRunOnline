@@ -145,7 +145,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         Debug.Log($"Joined Room: {PhotonNetwork.CurrentRoom.Name}");
-        SceneManager.LoadScene(gameSceneName);
+        PhotonNetwork.LoadLevel(gameSceneName);
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)

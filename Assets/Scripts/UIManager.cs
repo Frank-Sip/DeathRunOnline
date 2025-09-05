@@ -244,7 +244,8 @@ public class UIManager : MonoBehaviourPunCallbacks
 
     public void OnJoinRandomButton()
     {
-        PhotonManager.Instance.JoinRandomRoomSafe();
+        //PhotonManager.Instance.JoinRandomRoomSafe();
+        PhotonManager.Instance.JoinOrCreateRoom(roomNameInput.text);
     }
 
     private void OnRefreshButton()

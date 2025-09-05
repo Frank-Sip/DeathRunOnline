@@ -10,7 +10,6 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public static PhotonManager Instance;
 
     [SerializeField] private string gameSceneName;
-    [SerializeField] private bool isMasterClientLoadLevel = true; 
 
     private List<RoomInfo> cachedRoomList = new List<RoomInfo>();
 
@@ -20,8 +19,6 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
-            PhotonNetwork.AutomaticallySyncScene = true;
         }
         else
             Destroy(gameObject);
@@ -39,19 +36,18 @@ public class PhotonManager : MonoBehaviourPunCallbacks
             Debug.Log("Connecting to Photon...");
             PhotonNetwork.ConnectUsingSettings();
         }
-        else if (!PhotonNetwork.InLobby)
-        {
-            JoinLobby();
-        }
+        //else if (!PhotonNetwork.InLobby)
+        //{
+        //    JoinLobby();
+        //}
     }
 
     public void JoinLobby()
     {
-        if (PhotonNetwork.IsConnected && !PhotonNetwork.InLobby)
-        {
-            Debug.Log("Joining Lobby...");
-            PhotonNetwork.JoinLobby();
-        }
+
+        Debug.Log("Joining Lobby...");
+        PhotonNetwork.JoinLobby();
+        
     }
 
     public void JoinOrCreateRoom(string roomName)
@@ -106,10 +102,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public override void OnJoinedLobby()
     {
         Debug.Log("Joined Lobby Successfully");
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ShowLobbyPanel();
-        }
+        UIManager.Instance.ShowLobbyPanel();
     }
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
@@ -151,22 +144,8 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     public override void OnJoinedRoom()
     {
-        Debug.Log($"Joined Room: {PhotonNetwork.CurrentRoom.Name} as {(PhotonNetwork.IsMasterClient ? "MasterClient" : "Client")}");
-
-        if (PhotonNetwork.IsMasterClient && isMasterClientLoadLevel)
-        {
-            Debug.Log("Loading game scene as MasterClient...");
-            PhotonNetwork.LoadLevel(gameSceneName);
-        }
-        else if (!isMasterClientLoadLevel)
-        {
-            PhotonNetwork.LoadLevel(gameSceneName);
-        }
-    }
-
-    public override void OnMasterClientSwitched(Player newMasterClient)
-    {
-        Debug.Log($"MasterClient switched to: {newMasterClient.NickName}");
+        Debug.Log($"Joined Room: {PhotonNetwork.CurrentRoom.Name}");
+        SceneManager.LoadScene(gameSceneName);
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)

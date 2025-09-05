@@ -10,44 +10,56 @@ public class GameStarter : MonoBehaviourPunCallbacks
     [SerializeField] private Transform playerSpawnPoint;
     [SerializeField] private List<Transform> playerSpawnPoints = new List<Transform>();
     private int currentSpawnIndex = 0;
-    private bool hasSpawned = false;
 
     private void Start()
     {
+        //if (!photonView.IsMine) return;
+
         StartCoroutine(CheckRoomStatus());
     }
 
     private IEnumerator CheckRoomStatus()
     {
-        yield return null; 
+        yield return new WaitUntil(()=> PhotonNetwork.InRoom);
 
-        if (PhotonNetwork.InRoom && !hasSpawned)
-        {
-            SpawnPlayer();
-        }
-        else if (!PhotonNetwork.InRoom)
-        {
-            Debug.LogWarning("Not in room when GameStarter started. This shouldn't happen.");
-            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
-        }
+        yield return new WaitForEndOfFrame();
+        SpawnPlayer();
+
+       
+
+        //if (PhotonNetwork.InRoom && !hasSpawned)
+        //{
+        //    SpawnPlayer();
+        //}
+        //else if (!PhotonNetwork.InRoom)
+        //{
+        //    Debug.LogWarning("Not in room when GameStarter started. This shouldn't happen.");
+        //    UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+        //}
     }
 
-    public override void OnJoinedRoom()
-    {
-        if (!hasSpawned)
-        {
-            Debug.Log("GameStarter: Joined Room - Spawning Player");
-            SpawnPlayer();
-        }
-    }
+    //REvisar si ya no se llama en la otra escena
+    //public override void OnJoinedRoom()
+    //{
+    //    if (!hasSpawned)
+    //    {
+    //        Debug.Log("GameStarter: Joined Room - Spawning Player");
+    //        SpawnPlayer();
+    //    }
+    //}
 
     private void SpawnPlayer()
     {
-        if (hasSpawned) return;
 
-        hasSpawned = true;
         Transform spawn = GetPlayerSpawnPosition();
+
+        //Instantiate(playerPrefab.gameObject, spawn.position, spawn.rotation);
         PhotonNetwork.Instantiate(playerPrefab.name, spawn.position, spawn.rotation, 0);
+        
+        print("Player instantaited!");
+
+        print(PhotonNetwork.CurrentRoom.PlayerCount);
+
     }
 
     private Transform GetPlayerSpawnPosition()

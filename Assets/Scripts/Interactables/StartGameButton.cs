@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using UnityEngine;
 using Photon.Pun;
 
@@ -10,60 +9,48 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
 
     public void Interact()
     {
-        // Cualquier jugador puede interactuar, enviamos RPC a todos
-        photonView.RPC("RPC_StartGame", RpcTarget.All);
-    }
-
-    [PunRPC]
-    private void RPC_StartGame()
-    {
-        // Solo el Master Client asigna los tags
-        if (PhotonNetwork.IsMasterClient)
+        if (!PhotonNetwork.IsMasterClient)
         {
-            gameTagManager.AssignRandomTags();
+            Debug.Log("Solo el host puede iniciar el juego");
+            return;
         }
 
-        // Esperamos un poco y luego cada jugador verifica si es el killer
-        StartCoroutine(CheckAndTeleportKiller());
+        StartCoroutine(StartGameSequence());
     }
 
-    private IEnumerator CheckAndTeleportKiller()
+    private IEnumerator StartGameSequence()
     {
-        // Esperamos a que se sincronicen las propiedades
-        yield return new WaitForSeconds(1f);
+        Debug.Log("Iniciando juego...");
+        gameTagManager.AssignRandomTags();
+        yield return new WaitForSeconds(0.5f);
+        TeleportKillerToSpawn();
 
-        // Buscamos al jugador local
-        PlayerModel localPlayer = null;
+        Debug.Log("Juego iniciado correctamente");
+    }
+
+    private void TeleportKillerToSpawn()
+    {
+        if (killerSpawnPoint == null)
+        {
+            Debug.LogWarning("No se ha asignado punto de spawn para el killer");
+            return;
+        }
+
         PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
 
         foreach (PlayerModel player in allPlayers)
         {
-            if (player.PhotonView.IsMine)
+            if (player.PhotonView.Owner.CustomProperties.TryGetValue("playerTag", out object tagValue))
             {
-                localPlayer = player;
-                break;
-            }
-        }
+                string playerTag = tagValue.ToString();
 
-        if (localPlayer == null) yield break;
-
-        // Verificamos si el jugador local es el killer
-        if (localPlayer.PhotonView.Owner.CustomProperties.TryGetValue("playerTag", out object tagValue))
-        {
-            string playerTag = tagValue.ToString();
-            if (playerTag.ToLower() == "killer" && killerSpawnPoint != null)
-            {
-                // Si soy el killer, me teletransporto yo mismo
-                localPlayer.transform.position = killerSpawnPoint.position;
-
-                // Resetear velocidad si tiene Rigidbody
-                Rigidbody rb = localPlayer.GetComponent<Rigidbody>();
-                if (rb != null)
+                if (playerTag.ToLower() == "killer")
                 {
-                    rb.velocity = Vector3.zero;
-                }
+                    player.PhotonView.RPC("RPC_TeleportPlayer", RpcTarget.All, killerSpawnPoint.position);
 
-                Debug.Log($"Killer {localPlayer.PhotonView.Owner.NickName} teleported to spawn point");
+                    Debug.Log($"Killer {player.PhotonView.Owner.NickName} teletransportado al punto de spawn");
+                    break;
+                }
             }
         }
     }

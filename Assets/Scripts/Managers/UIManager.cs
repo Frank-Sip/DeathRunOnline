@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine.UI;
@@ -115,9 +115,16 @@ public class UIManager : MonoBehaviourPunCallbacks
     {
         if (connectionButton != null) connectionButton.onClick.AddListener(OnConnectButton);
         if (continueButton != null) continueButton.onClick.AddListener(OnContinueButton);
-        
+
+        // Configuración del input de nickname
         nameInput.onValueChanged.AddListener(VerifyName);
         nameInput.onSubmit.AddListener(OnInputSubmit);
+
+        // Configuración del input de room name
+        if (roomNameInput != null)
+        {
+            roomNameInput.onSubmit.AddListener(OnRoomNameSubmit);
+        }
 
         if (createRoomButton != null)
             createRoomButton.onClick.AddListener(OnCreateRoomButton);
@@ -194,6 +201,14 @@ public class UIManager : MonoBehaviourPunCallbacks
         }
     }
 
+    private void OnRoomNameSubmit(string _)
+    {
+        if (!string.IsNullOrEmpty(roomNameInput.text))
+        {
+            OnCreateRoomButton();
+        }
+    }
+
     private void OnContinueButton()
     {
         SavePlayerPreferences();
@@ -239,7 +254,7 @@ public class UIManager : MonoBehaviourPunCallbacks
             if (lobbyPanel != null) lobbyPanel.SetActive(false);
         }
     }
-    
+
     private bool IsMatchmakingReady()
     {
         return PhotonNetwork.IsConnectedAndReady && PhotonNetwork.InLobby;

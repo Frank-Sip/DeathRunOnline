@@ -45,6 +45,8 @@ MonoBehaviour:
   - RPC_PushPlayer
   - ForceVisibilitySync
   - SyncAllPlayers
+  - RPC_TeleportPlayer
+  - RPC_StartGame
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

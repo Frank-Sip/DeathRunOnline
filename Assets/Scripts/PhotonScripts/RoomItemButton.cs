@@ -15,26 +15,18 @@ public class RoomItemButton : MonoBehaviour
 
     private void Awake()
     {
-        if (roomButton == null)
-            roomButton = GetComponent<Button>();
-
-        if (roomButton != null)
-            roomButton.onClick.AddListener(OnButtonPressed);
+       roomButton = GetComponent<Button>();
+        roomButton.onClick.AddListener(OnButtonPressed);
     }
+    
     public void SetupRoom(string name, int currentPlayerCount, int maxPlayerCount)
     {
         RoomName = name;
         currentPlayers = currentPlayerCount;
         maxPlayers = maxPlayerCount;
-
-        if (roomNameText != null)
-            roomNameText.text = name;
-
-        if (playerCountText != null)
-            playerCountText.text = $"{currentPlayerCount}/{maxPlayerCount}";
-
-        if (roomButton != null)
-            roomButton.interactable = (currentPlayerCount < maxPlayerCount);
+        roomNameText.text = name;
+        playerCountText.text = $"{currentPlayerCount}/{maxPlayerCount}";
+        roomButton.interactable = (currentPlayerCount < maxPlayerCount);
     }
     public void OnButtonPressed()
     {
@@ -43,6 +35,7 @@ public class RoomItemButton : MonoBehaviour
             PhotonManager.Instance.JoinRoomByName(RoomName);
         }
     }
+    
     public bool IsRoomFull()
     {
         return currentPlayers >= maxPlayers;

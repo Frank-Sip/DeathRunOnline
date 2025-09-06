@@ -274,6 +274,16 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable
         }
     }
     
+    [PunRPC]
+    public void RPC_TeleportPlayer(Vector3 newPosition)
+    {
+        transform.position = newPosition;
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+        }
+    }
+    
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;

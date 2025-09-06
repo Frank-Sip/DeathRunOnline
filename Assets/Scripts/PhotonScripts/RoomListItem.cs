@@ -13,19 +13,13 @@ public class RoomListItem : MonoBehaviour
     public void SetupRoom(string name, int currentPlayers, int maxPlayers)
     {
         roomName = name;
-
-        if (roomNameText != null)
-            roomNameText.text = name;
-
-        if (playerCountText != null)
-            playerCountText.text = $"{currentPlayers}/{maxPlayers}";
+        roomNameText.text = name;
+        playerCountText.text = $"{currentPlayers}/{maxPlayers}";
 
         if (joinButton != null)
         {
             joinButton.onClick.RemoveAllListeners();
             joinButton.onClick.AddListener(OnJoinButtonClicked);
-
-            // Disable button if room is full
             joinButton.interactable = (currentPlayers < maxPlayers);
         }
     }

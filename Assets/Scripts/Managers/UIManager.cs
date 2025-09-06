@@ -44,6 +44,10 @@ public class UIManager : MonoBehaviourPunCallbacks
     private int selectedSkinIndex = 0;
     private List<GameObject> roomListItems = new List<GameObject>();
 
+    private Coroutine createRoomRoutine;
+    private Coroutine joinRoomByNameRoutine;
+    private Coroutine joinOrCreateRoutine;
+
     private void Awake()
     {
         if (Instance == null)
@@ -111,7 +115,9 @@ public class UIManager : MonoBehaviourPunCallbacks
     {
         if (connectionButton != null) connectionButton.onClick.AddListener(OnConnectButton);
         if (continueButton != null) continueButton.onClick.AddListener(OnContinueButton);
-        if (nameInput != null) nameInput.onValueChanged.AddListener(VerifyName);
+        
+        nameInput.onValueChanged.AddListener(VerifyName);
+        nameInput.onSubmit.AddListener(OnInputSubmit);
 
         if (createRoomButton != null)
             createRoomButton.onClick.AddListener(OnCreateRoomButton);
@@ -180,6 +186,14 @@ public class UIManager : MonoBehaviourPunCallbacks
         }
     }
 
+    private void OnInputSubmit(string _)
+    {
+        if (continueButton != null && continueButton.interactable)
+        {
+            OnContinueButton();
+        }
+    }
+
     private void OnContinueButton()
     {
         SavePlayerPreferences();
@@ -225,27 +239,85 @@ public class UIManager : MonoBehaviourPunCallbacks
             if (lobbyPanel != null) lobbyPanel.SetActive(false);
         }
     }
+    
+    private bool IsMatchmakingReady()
+    {
+        return PhotonNetwork.IsConnectedAndReady && PhotonNetwork.InLobby;
+    }
+
+    private IEnumerator WaitAndCreateRoom(string roomName)
+    {
+        Debug.Log("[UI] Waiting for matchmaking to be ready (CreateRoom)...");
+        yield return new WaitUntil(() => IsMatchmakingReady());
+        Debug.Log("[UI] Ready. Create/Join room: " + roomName);
+        PhotonManager.Instance.JoinOrCreateRoom(roomName);
+        createRoomRoutine = null;
+    }
+
+    private IEnumerator WaitAndJoinRoomByName(string roomName)
+    {
+        Debug.Log("[UI] Waiting for matchmaking to be ready (JoinByName)...");
+        yield return new WaitUntil(() => IsMatchmakingReady());
+        Debug.Log("[UI] Ready. Join room by name: " + roomName);
+        PhotonManager.Instance.JoinRoomByName(roomName);
+        joinRoomByNameRoutine = null;
+    }
+
+    private IEnumerator WaitAndJoinOrCreate(string roomName)
+    {
+        Debug.Log("[UI] Waiting for matchmaking to be ready (JoinOrCreate)...");
+        yield return new WaitUntil(() => IsMatchmakingReady());
+        Debug.Log("[UI] Ready. JoinOrCreate: " + roomName);
+        PhotonManager.Instance.JoinOrCreateRoom(roomName);
+        joinOrCreateRoutine = null;
+    }
+
     public void OnCreateRoomButton()
     {
-        string roomName = roomNameInput.text;
+        string roomName = roomNameInput != null ? roomNameInput.text : string.Empty;
         if (string.IsNullOrEmpty(roomName))
             roomName = $"{nickname}'s Room";
 
-        PhotonManager.Instance.JoinOrCreateRoom(roomName);
+        if (IsMatchmakingReady())
+        {
+            PhotonManager.Instance.JoinOrCreateRoom(roomName);
+        }
+        else if (createRoomRoutine == null)
+        {
+            Debug.LogWarning("[UI] Matchmaking not ready. Queuing CreateRoom...");
+            createRoomRoutine = StartCoroutine(WaitAndCreateRoom(roomName));
+        }
     }
 
     private void OnJoinRoomByNameButton()
     {
-        if (!string.IsNullOrEmpty(roomNameInput.text))
+        string roomName = roomNameInput != null ? roomNameInput.text : string.Empty;
+        if (string.IsNullOrEmpty(roomName)) return;
+
+        if (IsMatchmakingReady())
         {
-            PhotonManager.Instance.JoinRoomByName(roomNameInput.text);
+            PhotonManager.Instance.JoinRoomByName(roomName);
+        }
+        else if (joinRoomByNameRoutine == null)
+        {
+            Debug.LogWarning("[UI] Matchmaking not ready. Queuing JoinRoomByName...");
+            joinRoomByNameRoutine = StartCoroutine(WaitAndJoinRoomByName(roomName));
         }
     }
 
     public void OnJoinRandomButton()
     {
-        //PhotonManager.Instance.JoinRandomRoomSafe();
-        PhotonManager.Instance.JoinOrCreateRoom(roomNameInput.text);
+        string roomName = roomNameInput != null ? roomNameInput.text : string.Empty;
+
+        if (IsMatchmakingReady())
+        {
+            PhotonManager.Instance.JoinOrCreateRoom(roomName);
+        }
+        else if (joinOrCreateRoutine == null)
+        {
+            Debug.LogWarning("[UI] Matchmaking not ready. Queuing JoinOrCreate...");
+            joinOrCreateRoutine = StartCoroutine(WaitAndJoinOrCreate(roomName));
+        }
     }
 
     private void OnRefreshButton()
@@ -255,7 +327,7 @@ public class UIManager : MonoBehaviourPunCallbacks
 
     public void UpdateRoomList(List<RoomInfo> roomList)
     {
-        if (!IsMenuScene()) return; 
+        if (!IsMenuScene()) return;
 
         ClearRoomList();
         int totalPlayers = 0;
@@ -280,8 +352,8 @@ public class UIManager : MonoBehaviourPunCallbacks
                     Button btn = roomItem.GetComponent<Button>();
                     if (btn != null)
                     {
-                        string roomName = room.Name;
-                        btn.onClick.AddListener(() => PhotonManager.Instance.JoinRoomByName(roomName));
+                        string rName = room.Name;
+                        btn.onClick.AddListener(() => PhotonManager.Instance.JoinRoomByName(rName));
                     }
                 }
 

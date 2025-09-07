@@ -47,6 +47,7 @@ MonoBehaviour:
   - SyncAllPlayers
   - RPC_TeleportPlayer
   - RPC_StartGame
+  - ReceiveChatMessage
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

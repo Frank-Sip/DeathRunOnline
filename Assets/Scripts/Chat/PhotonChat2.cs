@@ -38,4 +38,21 @@ public class PhotonChat2 : MonoBehaviourPunCallbacks
     {
         view.RPC("ReceiveChatMessage", other , "Ha ingresado un nuevo jugador");
     }
+
+    public void HandleEnterPress(ref bool chatOpen, GameObject chatPanel, System.Action<bool> LockCursor)
+    {
+        if (!string.IsNullOrEmpty(chatInput.text))
+        {
+            SendMessageToChat(chatInput.text);
+            chatInput.text = "";
+            chatInput.ActivateInputField();
+        }
+        else
+        {
+            chatOpen = false;
+            chatPanel.SetActive(false);
+            LockCursor(true);
+        }
+    }
+
 }

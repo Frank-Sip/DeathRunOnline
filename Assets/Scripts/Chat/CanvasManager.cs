@@ -20,19 +20,22 @@ public class CanvasManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.T))
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
         {
-            chatOpen = !chatOpen;
-            chatPanel.SetActive(chatOpen);
-
-            if (chatOpen)
+            if (!chatOpen)
             {
+                chatOpen = true;
+                chatPanel.SetActive(true);
+
                 LockCursor(false);
-                photonChat.chatInput.ActivateInputField();
+
+                photonChat.chatInput.gameObject.SetActive(true);
+                photonChat.chatInput.Select();                   
+                photonChat.chatInput.ActivateInputField();       
             }
             else
             {
-                LockCursor(true);
+                photonChat.HandleEnterPress(ref chatOpen, chatPanel, LockCursor);
             }
         }
     }

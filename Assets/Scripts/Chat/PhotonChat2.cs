@@ -12,25 +12,38 @@ public class PhotonChat2 : MonoBehaviourPunCallbacks
     public PhotonView view;
 
     [Header("Chat Settings")]
-    [SerializeField] public int maxMessages = 50;
+    [SerializeField] public int maxMessages = 10;
     public ScrollRect scrollRect;
 
     private Queue<string> messages = new Queue<string>();
 
     void Start()
     {
-        if (chatInput != null)
+        chatInput.onSubmit.AddListener(OnSubmit);
+
+        SetupScrollView();
+    }
+
+    private void SetupScrollView()
+    {
+        if (scrollRect == null) return;
+
+        scrollRect.vertical = true;
+        scrollRect.horizontal = false;
+        scrollRect.movementType = ScrollRect.MovementType.Clamped;
+        
+        ContentSizeFitter fitter = scrollRect.content.GetComponent<ContentSizeFitter>();
+        if (fitter == null)
         {
-            chatInput.onSubmit.AddListener(OnSubmit);
+            fitter = scrollRect.content.gameObject.AddComponent<ContentSizeFitter>();
         }
+        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
     }
 
     void OnDestroy()
     {
-        if (chatInput != null)
-        {
-            chatInput.onSubmit.RemoveListener(OnSubmit);
-        }
+        chatInput.onSubmit.RemoveListener(OnSubmit);
     }
 
     private void OnSubmit(string text) { }
@@ -45,13 +58,13 @@ public class PhotonChat2 : MonoBehaviourPunCallbacks
     void ReceiveChatMessage(string sender, string message)
     {
         message = message.Replace("<", "").Replace(">", "");
-        AddMessage($"\n<color=#00ff00><b>{sender}:</b></color> {message}");
+        AddMessage($"<color=#00ff00><b>{sender}:</b></color> {message}");
     }
 
     [PunRPC]
     void ReceiveChatMessage(string message)
     {
-        AddMessage($"\n<color=#ffff00><b>{message}</b></color>");
+        AddMessage($"<color=#ffff00><b>{message}</b></color>");
     }
 
     private void AddMessage(string formattedMessage)
@@ -59,26 +72,46 @@ public class PhotonChat2 : MonoBehaviourPunCallbacks
         bool wasAtBottom = IsScrolledToBottom();
 
         messages.Enqueue(formattedMessage);
-        if (messages.Count > maxMessages)
+
+        while (messages.Count > maxMessages)
+        {
             messages.Dequeue();
+        }
 
-        chatDisplay.text = string.Join("", messages);
+        chatDisplay.text = string.Join("\n", messages);
 
-        if (wasAtBottom)
-            StartCoroutine(ScrollToBottom());
+        StartCoroutine(UpdateScrollAfterLayout(wasAtBottom));
+    }
+
+    IEnumerator UpdateScrollAfterLayout(bool wasAtBottom)
+    {
+        yield return null;
+
+        if (scrollRect != null && scrollRect.content != null)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollRect.content);
+            Canvas.ForceUpdateCanvases();
+
+            if (wasAtBottom)
+            {
+                yield return null;
+                scrollRect.verticalNormalizedPosition = 0f;
+            }
+        }
     }
 
     private bool IsScrolledToBottom()
     {
         if (scrollRect == null) return true;
-        return scrollRect.verticalNormalizedPosition <= 0.001f;
+        return scrollRect.verticalNormalizedPosition <= 0.05f;
     }
 
     IEnumerator ScrollToBottom()
     {
         yield return null;
-        if (scrollRect != null)
-            scrollRect.verticalNormalizedPosition = 0f;
+        yield return null;
+        
+        scrollRect.verticalNormalizedPosition = 0f;
     }
 
     public override void OnPlayerEnteredRoom(Player other)
@@ -104,11 +137,7 @@ public class PhotonChat2 : MonoBehaviourPunCallbacks
             chatOpen = false;
             chatPanel.SetActive(false);
             LockCursor(true);
-
-            if (playerController != null)
-            {
-                playerController.SetChatMode(false);
-            }
+            playerController.SetChatMode(false);
         }
     }
 }

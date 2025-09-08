@@ -6,6 +6,7 @@ public class PlayerController : MonoBehaviour
     private PlayerView playerView;
     private PlayerNickname playerUI;
     private bool cursorLocked = true;
+    private bool inChatMode = false; 
 
     private void Start()
     {
@@ -28,19 +29,41 @@ public class PlayerController : MonoBehaviour
     {
         if (playerModel.PhotonView.IsMine)
         {
-            HandleCursorToggle();
-            HandleTabVisibility();
-
-            if (cursorLocked)
+            if (!inChatMode)
             {
-                HandleMovementInput();
-                HandleJumpInput();
-                TryInteract();
+                HandleCursorToggle();
+                HandleTabVisibility();
+
+                if (cursorLocked)
+                {
+                    HandleMovementInput();
+                    HandleJumpInput();
+                    TryInteract();
+                }
             }
+            else
+            {
+                HandleTabVisibility();
+            }
+
             UpdateGameplayLogic();
         }
 
         UpdateVisuals();
+    }
+
+    public void SetChatMode(bool enabled)
+    {
+        inChatMode = enabled;
+
+        if (enabled)
+        {
+            Debug.Log("Player input disabled - Chat mode active");
+        }
+        else
+        {
+            Debug.Log("Player input enabled - Chat mode inactive");
+        }
     }
 
     private void HandleTabVisibility()

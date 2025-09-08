@@ -1,47 +1,99 @@
-using Photon.Pun;
+﻿using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
+using System.Collections.Generic;
 
 public class PhotonChat2 : MonoBehaviourPunCallbacks
 {
     public TMPro.TMP_InputField chatInput;
     public TMPro.TextMeshProUGUI chatDisplay;
     public PhotonView view;
-    void Update()
+
+    [Header("Chat Settings")]
+    [SerializeField] public int maxMessages = 50;
+    public ScrollRect scrollRect;
+
+    private Queue<string> messages = new Queue<string>();
+
+    void Start()
     {
-        if (Input.GetKeyDown(KeyCode.Return) && !string.IsNullOrEmpty(chatInput.text))
+        if (chatInput != null)
         {
-            SendMessageToChat(chatInput.text);
-            chatInput.text = "";
+            chatInput.onSubmit.AddListener(OnSubmit);
         }
     }
 
+    void OnDestroy()
+    {
+        if (chatInput != null)
+        {
+            chatInput.onSubmit.RemoveListener(OnSubmit);
+        }
+    }
+
+    private void OnSubmit(string text) { }
+
     public void SendMessageToChat(string message)
     {
+        if (string.IsNullOrWhiteSpace(message)) return;
         view.RPC("ReceiveChatMessage", RpcTarget.AllBuffered, PhotonNetwork.NickName, message);
     }
 
     [PunRPC]
     void ReceiveChatMessage(string sender, string message)
     {
-        chatDisplay.text += $"\n<b>{sender}:</b> {message}";
+        message = message.Replace("<", "").Replace(">", "");
+        AddMessage($"\n<color=#00ff00><b>{sender}:</b></color> {message}");
     }
 
     [PunRPC]
     void ReceiveChatMessage(string message)
     {
-        chatDisplay.text += $"\n<b>{message}</b>";
+        AddMessage($"\n<color=#ffff00><b>{message}</b></color>");
+    }
+
+    private void AddMessage(string formattedMessage)
+    {
+        bool wasAtBottom = IsScrolledToBottom();
+
+        messages.Enqueue(formattedMessage);
+        if (messages.Count > maxMessages)
+            messages.Dequeue();
+
+        chatDisplay.text = string.Join("", messages);
+
+        if (wasAtBottom)
+            StartCoroutine(ScrollToBottom());
+    }
+
+    private bool IsScrolledToBottom()
+    {
+        if (scrollRect == null) return true;
+        return scrollRect.verticalNormalizedPosition <= 0.001f;
+    }
+
+    IEnumerator ScrollToBottom()
+    {
+        yield return null;
+        if (scrollRect != null)
+            scrollRect.verticalNormalizedPosition = 0f;
     }
 
     public override void OnPlayerEnteredRoom(Player other)
     {
-        view.RPC("ReceiveChatMessage", other , "Ha ingresado un nuevo jugador");
+        view.RPC("ReceiveChatMessage", RpcTarget.All, $"{other.NickName} ha ingresado a la sala");
     }
 
-    public void HandleEnterPress(ref bool chatOpen, GameObject chatPanel, System.Action<bool> LockCursor)
+    public override void OnPlayerLeftRoom(Player other)
     {
-        if (!string.IsNullOrEmpty(chatInput.text))
+        view.RPC("ReceiveChatMessage", RpcTarget.All, $"{other.NickName} ha salido de la sala");
+    }
+
+    public void HandleEnterPress(ref bool chatOpen, GameObject chatPanel, System.Action<bool> LockCursor, PlayerController playerController)
+    {
+        if (!string.IsNullOrWhiteSpace(chatInput.text))
         {
             SendMessageToChat(chatInput.text);
             chatInput.text = "";
@@ -52,7 +104,11 @@ public class PhotonChat2 : MonoBehaviourPunCallbacks
             chatOpen = false;
             chatPanel.SetActive(false);
             LockCursor(true);
+
+            if (playerController != null)
+            {
+                playerController.SetChatMode(false);
+            }
         }
     }
-
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 
-public class SpawnManager : MonoBehaviour
+public class SpawnManager : MonoBehaviourPun
 {
     [Header("Spawn Settings")]
     public Transform spawnPoint;
@@ -23,28 +23,28 @@ public class SpawnManager : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         PhotonView photonView = other.GetComponent<PhotonView>();
-        if (photonView != null && !photonView.IsMine) return;
+        if (photonView == null || !photonView.IsMine) return;
 
         int normalLayerIndex = GetLayerFromMask(playerLayer);
-        
+
         if (other.gameObject.layer == normalLayerIndex)
         {
             int protectedLayerIndex = GetLayerFromMask(protectedLayer);
-            other.gameObject.layer = protectedLayerIndex;
+            photonView.RPC("RPC_ChangeLayer", RpcTarget.All, protectedLayerIndex);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
         PhotonView photonView = other.GetComponent<PhotonView>();
-        if (photonView != null && !photonView.IsMine) return;
+        if (photonView == null || !photonView.IsMine) return;
 
         int protectedLayerIndex = GetLayerFromMask(protectedLayer);
-        
+
         if (other.gameObject.layer == protectedLayerIndex)
         {
             int normalLayerIndex = GetLayerFromMask(playerLayer);
-            other.gameObject.layer = normalLayerIndex;
+            photonView.RPC("RPC_ChangeLayer", RpcTarget.All, normalLayerIndex);
         }
     }
 

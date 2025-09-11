@@ -320,6 +320,12 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         }
     }
     
+    [PunRPC]
+    public void RPC_ChangeLayer(int newLayer)
+    {
+        gameObject.layer = newLayer;
+    }
+    
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;

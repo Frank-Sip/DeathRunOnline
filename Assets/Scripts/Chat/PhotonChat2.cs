@@ -116,12 +116,20 @@ public class PhotonChat2 : MonoBehaviourPunCallbacks
 
     public override void OnPlayerEnteredRoom(Player other)
     {
-        view.RPC("ReceiveChatMessage", RpcTarget.All, $"{other.NickName} ha ingresado a la sala");
+        if (photonView == null || photonView.ViewID == 0 || !PhotonNetwork.InRoom)
+        {
+            Debug.LogWarning("Chat PhotonView not ready. Skipping welcome message.");
+            return;
+        }
     }
 
     public override void OnPlayerLeftRoom(Player other)
     {
-        view.RPC("ReceiveChatMessage", RpcTarget.All, $"{other.NickName} ha salido de la sala");
+        if (view == null || view.ViewID == 0 || !PhotonNetwork.InRoom)
+        {
+            Debug.LogWarning("Chat PhotonView not ready. Skipping left room message.");
+            return;
+        }
     }
 
     public void HandleEnterPress(ref bool chatOpen, GameObject chatPanel, System.Action<bool> LockCursor, PlayerController playerController)

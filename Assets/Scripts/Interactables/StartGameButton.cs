@@ -6,36 +6,40 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
 {
     [SerializeField] private GameTagManager gameTagManager;
     [SerializeField] private Transform killerSpawnPoint;
+    
+    private bool isActive = true;
 
     public void Interact()
     {
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            Debug.Log("Solo el host puede iniciar el juego");
-            return;
-        }
+        if (!isActive) return;
+        photonView.RPC("RPC_SetButtonActive", RpcTarget.All, false);
+        photonView.RPC("RPC_StartGame", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
+    }
 
-        StartCoroutine(StartGameSequence());
+    [PunRPC]
+    private void RPC_SetButtonActive(bool active)
+    {
+        isActive = active;
+    }
+
+    [PunRPC]
+    private void RPC_StartGame(int requesterActorNumber)
+    {
+        if (PhotonNetwork.LocalPlayer.ActorNumber == requesterActorNumber)
+        {
+            StartCoroutine(StartGameSequence());
+        }
     }
 
     private IEnumerator StartGameSequence()
     {
-        Debug.Log("Iniciando juego...");
         gameTagManager.AssignRandomTags();
         yield return new WaitForSeconds(0.5f);
         TeleportKillerToSpawn();
-
-        Debug.Log("Juego iniciado correctamente");
     }
 
     private void TeleportKillerToSpawn()
     {
-        if (killerSpawnPoint == null)
-        {
-            Debug.LogWarning("No se ha asignado punto de spawn para el killer");
-            return;
-        }
-
         PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
 
         foreach (PlayerModel player in allPlayers)
@@ -47,8 +51,6 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
                 if (playerTag.ToLower() == "killer")
                 {
                     player.PhotonView.RPC("RPC_TeleportPlayer", RpcTarget.All, killerSpawnPoint.position);
-
-                    Debug.Log($"Killer {player.PhotonView.Owner.NickName} teletransportado al punto de spawn");
                     break;
                 }
             }

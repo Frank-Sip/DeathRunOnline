@@ -50,6 +50,8 @@ MonoBehaviour:
   - ReceiveChatMessage
   - RPC_DestroyTrap
   - RPC_ChangeLayer
+  - RPC_SetButtonActive
+  - RPC_UpdateAliveState
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

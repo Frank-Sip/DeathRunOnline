@@ -221,11 +221,21 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     {
         isAlive = false;
         GameTagManager.Instance.SetPlayerTag(PhotonView.Owner, "Dead");
-        Collider playerCollider = GetComponent<Collider>();
-        playerCollider.enabled = false;
-        rb.isKinematic = true;
         PhotonView.RPC("RPC_UpdateAliveState", RpcTarget.Others, false);
         OnPlayerDeath?.Invoke(this);
+    }
+    
+    [PunRPC]
+    private void RPC_UpdateAliveState(bool aliveState)
+    {
+        isAlive = aliveState;
+    
+        if (!aliveState)
+        {
+            Collider playerCollider = GetComponent<Collider>();
+            playerCollider.enabled = false;
+            rb.isKinematic = true;
+        }
     }
 
     [PunRPC]

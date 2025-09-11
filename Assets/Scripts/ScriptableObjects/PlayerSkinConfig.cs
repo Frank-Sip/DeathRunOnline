@@ -9,6 +9,7 @@ public class PlayerSkinConfig : ScriptableObject
         public string skinName;
         public GameObject modelPrefab;
         public Sprite skinIcon;
+        public Animator animator;
     }
 
     [Header("Available Skins")]

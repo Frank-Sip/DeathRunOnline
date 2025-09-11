@@ -29,7 +29,12 @@ public class PlayerController : MonoBehaviour
     {
         if (playerModel.PhotonView.IsMine)
         {
-            if (!inChatMode)
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                SetCursorLock(!cursorLocked);
+            }
+            
+            if (!inChatMode && playerModel.isAlive)
             {
                 HandleCursorToggle();
                 HandleTabVisibility();
@@ -40,6 +45,10 @@ public class PlayerController : MonoBehaviour
                     HandleJumpInput();
                     TryInteract();
                 }
+            }
+            else if (!playerModel.isAlive)
+            {
+                HandleTabVisibility();
             }
             else
             {
@@ -112,11 +121,6 @@ public class PlayerController : MonoBehaviour
 
     private void HandleCursorToggle()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            SetCursorLock(!cursorLocked);
-        }
-
         if (!cursorLocked && Input.GetMouseButtonDown(0))
         {
             SetCursorLock(true);

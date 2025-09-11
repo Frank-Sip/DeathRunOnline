@@ -1,10 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
+using Unity.VisualScripting;
 using UnityEngine;
+using System;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
-public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable
+public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamageable
 {
     [Header("Movement Settings")]
     [SerializeField] private MovementStats movementStats;
@@ -34,11 +36,13 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable
     private Collider[] interactables = new Collider[5];
     private bool isStunned = false;
     private float stunTimer = 0f;
-
+    
+    public bool isAlive = true;
     public PhotonView PhotonView => photonView ?? GetComponent<PhotonView>();
     public bool IsGrounded => isGrounded;
     public float CoyoteTimeCounter => coyoteTimeCounter;
     public float JumpBufferCounter => jumpBufferCounter;
+    public Action<PlayerModel> OnPlayerDeath;
 
     private float MoveSpeed => movementStats.MoveSpeed;
     private float RotationSpeed => movementStats.RotationSpeed;
@@ -115,8 +119,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable
 
     public void Move(Vector3 moveDirection, Vector3 currentVelocity)
     {
-        if (isStunned) return;
-        
+        if (isStunned || !isAlive) return;
         rb.velocity = moveDirection * MoveSpeed + new Vector3(0, currentVelocity.y, 0);
 
         if (moveDirection != Vector3.zero)
@@ -128,6 +131,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable
 
     public void Jump()
     {
+        if (isStunned || !isAlive) return;
         rb.velocity = new Vector3(rb.velocity.x, JumpForce, rb.velocity.z);
     }
 
@@ -150,6 +154,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable
     
     public void TryInteract()
     {
+        if (isStunned || !isAlive) return;
         int elements = Physics.OverlapSphereNonAlloc(interactionPoint.position, interactionRadius, interactables, interactionLayer);
 
         for (int i = 0; i < elements; i++)
@@ -212,6 +217,17 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable
         }
     }
 
+    public void Die()
+    {
+        isAlive = false;
+        GameTagManager.Instance.SetPlayerTag(PhotonView.Owner, "Dead");
+        Collider playerCollider = GetComponent<Collider>();
+        playerCollider.enabled = false;
+        rb.isKinematic = true;
+        PhotonView.RPC("RPC_UpdateAliveState", RpcTarget.Others, false);
+        OnPlayerDeath?.Invoke(this);
+    }
+
     [PunRPC]
     public void RPC_InformCollision(string playerName)
     {
@@ -262,15 +278,35 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable
     {
         if (stream.IsWriting)
         {
-            stream.SendNext(transform.position);
-            stream.SendNext(transform.rotation);
-            stream.SendNext(rb.velocity);
+            if (transform != null && rb != null)
+            {
+                stream.SendNext(transform.position);
+                stream.SendNext(transform.rotation);
+                stream.SendNext(rb.velocity);
+            }
+            else
+            {
+                stream.SendNext(Vector3.zero);
+                stream.SendNext(Quaternion.identity);
+                stream.SendNext(Vector3.zero);
+            }
         }
         else
         {
-            transform.position = (Vector3)stream.ReceiveNext();
-            transform.rotation = (Quaternion)stream.ReceiveNext();
-            rb.velocity = (Vector3)stream.ReceiveNext();
+            Vector3 position = (Vector3)stream.ReceiveNext();
+            Quaternion rotation = (Quaternion)stream.ReceiveNext();
+            Vector3 velocity = (Vector3)stream.ReceiveNext();
+        
+            if (transform != null)
+            {
+                transform.position = position;
+                transform.rotation = rotation;
+            }
+        
+            if (rb != null)
+            {
+                rb.velocity = velocity;
+            }
         }
     }
     

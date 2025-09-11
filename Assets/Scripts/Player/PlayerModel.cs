@@ -1,9 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
-using Unity.VisualScripting;
 using UnityEngine;
-using System;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamageable
@@ -16,7 +15,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     [SerializeField] private Transform groundCheckOrigin;
     [SerializeField] private LayerMask groundMask;
     [SerializeField] private int maxGroundHits = 5;
-    
+
     [Header("Interaction Settings")]
     [SerializeField] private Transform interactionPoint;
     [SerializeField] private float interactionRadius = 2f;
@@ -26,7 +25,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     public KeyCode seeTagKey = KeyCode.Tab;
 
     private const string PLAYER_TAG_KEY = "playerTag";
-    
+
     private PhotonView photonView;
     private Rigidbody rb;
     private float coyoteTimeCounter;
@@ -36,7 +35,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     private Collider[] interactables = new Collider[5];
     private bool isStunned = false;
     private float stunTimer = 0f;
-    
+
     public bool isAlive = true;
     public PhotonView PhotonView => photonView ?? GetComponent<PhotonView>();
     public bool IsGrounded => isGrounded;
@@ -59,13 +58,19 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         photonView = GetComponent<PhotonView>();
         rb = GetComponent<Rigidbody>();
         groundHits = new RaycastHit[maxGroundHits];
-        
+
         if (PhotonNetwork.InRoom)
         {
             UpdatePlayerTagFromProperties();
         }
+
+        Camera myCam = GetComponentInChildren<Camera>();
+        if (myCam != null && !PhotonView.IsMine)
+        {
+            myCam.enabled = false;
+        }
     }
-    
+
     private void OnEnable()
     {
         if (PhotonNetwork.InRoom)
@@ -73,7 +78,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             PhotonNetwork.NetworkingClient.EventReceived += OnPlayerPropertiesUpdate;
         }
     }
-    
+
     private void OnDisable()
     {
         if (PhotonNetwork.InRoom)
@@ -81,9 +86,15 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             PhotonNetwork.NetworkingClient.EventReceived -= OnPlayerPropertiesUpdate;
         }
     }
-    
+
     private void Update()
     {
+        if (!isAlive && PhotonView.IsMine)
+        {
+            HandleDeathCameraControls();
+            return;
+        }
+
         if (isStunned)
         {
             stunTimer -= Time.deltaTime;
@@ -93,12 +104,24 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             }
         }
     }
-    
+
+    private void HandleDeathCameraControls()
+    {
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            DeathCameraManager.Instance.ActivatePreviousCamera();
+        }
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            DeathCameraManager.Instance.ActivateNextCamera();
+        }
+    }
+
     public void Interact()
     {
         PhotonView.RPC("RPC_PushPlayer", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
     }
-    
+
     private void OnPlayerPropertiesUpdate(ExitGames.Client.Photon.EventData photonEvent)
     {
         if (photonEvent.Code == 253)
@@ -106,7 +129,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             UpdatePlayerTagFromProperties();
         }
     }
-    
+
     public void UpdatePlayerTagFromProperties()
     {
         if (PhotonView.Owner.CustomProperties.TryGetValue(PLAYER_TAG_KEY, out object tagValue))
@@ -151,7 +174,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             coyoteTimeCounter -= Time.deltaTime;
         }
     }
-    
+
     public void TryInteract()
     {
         if (isStunned || !isAlive) return;
@@ -192,7 +215,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         jumpBufferCounter = 0;
         coyoteTimeCounter = 0;
     }
-    
+
     public void ChangePlayerTag(string newTag)
     {
         PlayerNickname playerNickname = GetComponent<PlayerNickname>();
@@ -223,17 +246,32 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         GameTagManager.Instance.SetPlayerTag(PhotonView.Owner, "Dead");
         PhotonView.RPC("RPC_UpdateAliveState", RpcTarget.Others, false);
         OnPlayerDeath?.Invoke(this);
+
+        Collider playerCollider = GetComponent<Collider>();
+        if (playerCollider != null) playerCollider.enabled = false;
+        rb.isKinematic = true;
+
+        Camera myCam = GetComponentInChildren<Camera>();
+        if (myCam != null)
+        {
+            myCam.enabled = false;
+        }
+
+        if (PhotonView.IsMine)
+        {
+            DeathCameraManager.Instance.ActivateAnyCamera();
+        }
     }
-    
+
     [PunRPC]
     private void RPC_UpdateAliveState(bool aliveState)
     {
         isAlive = aliveState;
-    
+
         if (!aliveState)
         {
             Collider playerCollider = GetComponent<Collider>();
-            playerCollider.enabled = false;
+            if (playerCollider != null) playerCollider.enabled = false;
             rb.isKinematic = true;
         }
     }
@@ -243,7 +281,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     {
         Debug.Log($"{playerName} has collided with an object.");
     }
-    
+
     [PunRPC]
     public void RPC_PushPlayer(int pusherActorNumber)
     {
@@ -283,7 +321,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         print(PhotonView.ViewID);
         print(PhotonNetwork.NickName);
     }
-    
+
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.IsWriting)
@@ -306,20 +344,20 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             Vector3 position = (Vector3)stream.ReceiveNext();
             Quaternion rotation = (Quaternion)stream.ReceiveNext();
             Vector3 velocity = (Vector3)stream.ReceiveNext();
-        
+
             if (transform != null)
             {
                 transform.position = position;
                 transform.rotation = rotation;
             }
-        
+
             if (rb != null)
             {
                 rb.velocity = velocity;
             }
         }
     }
-    
+
     [PunRPC]
     public void RPC_TeleportPlayer(Vector3 newPosition)
     {
@@ -329,21 +367,20 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             rb.velocity = Vector3.zero;
         }
     }
-    
+
     [PunRPC]
     public void RPC_ChangeLayer(int newLayer)
     {
         gameObject.layer = newLayer;
     }
-    
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;
         Vector3 sphereCenter = groundCheckOrigin.position;
         Gizmos.DrawWireSphere(sphereCenter, GroundCheckRadius);
-        
+
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(interactionPoint.position, interactionRadius);
-        
     }
 }

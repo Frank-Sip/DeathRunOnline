@@ -653,19 +653,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8813846332720132211, guid: c1a251fc6f52d164d81a5c737f65a1a8, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8813846333263150914, guid: c1a251fc6f52d164d81a5c737f65a1a8, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8813846333263150914, guid: c1a251fc6f52d164d81a5c737f65a1a8, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8813846333263150914, guid: c1a251fc6f52d164d81a5c737f65a1a8, type: 3}
       propertyPath: m_SizeDelta.x
-      value: -17
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8813846333420349665, guid: c1a251fc6f52d164d81a5c737f65a1a8, type: 3}
       propertyPath: sceneViewId
@@ -681,15 +681,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8813846333742957207, guid: c1a251fc6f52d164d81a5c737f65a1a8, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8813846333742957207, guid: c1a251fc6f52d164d81a5c737f65a1a8, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8813846333742957207, guid: c1a251fc6f52d164d81a5c737f65a1a8, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.3269409
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8813846333833593777, guid: c1a251fc6f52d164d81a5c737f65a1a8, type: 3}
       propertyPath: m_Color.a

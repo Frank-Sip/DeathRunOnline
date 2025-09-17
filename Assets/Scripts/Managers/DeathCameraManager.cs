@@ -12,6 +12,12 @@ public class DeathCameraManager : MonoBehaviour
     private Camera spectatorCamera;
     [SerializeField] private Vector3 offset = new Vector3(0, 5, -6);
 
+    private float yaw = 0f;
+    private float pitch = 15f;
+    [SerializeField] private float mouseSensitivity = 3f;
+    [SerializeField] private float minPitch = -30f;
+    [SerializeField] private float maxPitch = 60f;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -19,6 +25,24 @@ public class DeathCameraManager : MonoBehaviour
 
         spectatorCamera = new GameObject("SpectatorCamera").AddComponent<Camera>();
         spectatorCamera.enabled = false;
+    }
+
+    private void Update()
+    {
+        if (spectatorCamera.enabled)
+        {
+            HandleSpectatorCameraInput();
+        }
+    }
+
+    private void HandleSpectatorCameraInput()
+    {
+        float mouseX = Input.GetAxis("Mouse X");
+        float mouseY = Input.GetAxis("Mouse Y");
+
+        yaw += mouseX * mouseSensitivity;
+        pitch -= mouseY * mouseSensitivity;
+        pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
     }
 
     public void RefreshAlivePlayers()
@@ -39,6 +63,7 @@ public class DeathCameraManager : MonoBehaviour
         if (alivePlayers.Count == 0) return;
 
         currentIndex = 0;
+        ResetSpectatorRotation();
         AttachToPlayer(alivePlayers[currentIndex]);
     }
 
@@ -47,6 +72,7 @@ public class DeathCameraManager : MonoBehaviour
         if (alivePlayers.Count == 0) return;
 
         currentIndex = (currentIndex + 1) % alivePlayers.Count;
+        ResetSpectatorRotation();
         AttachToPlayer(alivePlayers[currentIndex]);
     }
 
@@ -55,7 +81,14 @@ public class DeathCameraManager : MonoBehaviour
         if (alivePlayers.Count == 0) return;
 
         currentIndex = (currentIndex - 1 + alivePlayers.Count) % alivePlayers.Count;
+        ResetSpectatorRotation();
         AttachToPlayer(alivePlayers[currentIndex]);
+    }
+
+    private void ResetSpectatorRotation()
+    {
+        yaw = 0f;
+        pitch = 15f;
     }
 
     private void AttachToPlayer(PlayerModel player)
@@ -71,8 +104,12 @@ public class DeathCameraManager : MonoBehaviour
     {
         while (target != null && target.isAlive)
         {
-            spectatorCamera.transform.position = target.transform.position + offset;
-            spectatorCamera.transform.LookAt(target.transform.position + Vector3.up * 1.5f);
+            Vector3 targetPos = target.transform.position + offset;
+            Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
+
+            spectatorCamera.transform.position = targetPos;
+            spectatorCamera.transform.rotation = rotation;
+
             yield return null;
         }
 

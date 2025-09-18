@@ -104,11 +104,13 @@ public class DeathCameraManager : MonoBehaviour
     {
         while (target != null && target.isAlive)
         {
-            Vector3 targetPos = target.transform.position + offset;
             Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
 
-            spectatorCamera.transform.position = targetPos;
-            spectatorCamera.transform.rotation = rotation;
+            Vector3 targetPos = target.transform.position;
+            Vector3 camPos = targetPos + rotation * offset;
+
+            spectatorCamera.transform.position = camPos;
+            spectatorCamera.transform.LookAt(targetPos);
 
             yield return null;
         }

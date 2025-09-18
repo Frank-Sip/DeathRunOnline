@@ -29,8 +29,8 @@ MonoBehaviour:
     EnableLobbyStatistics: 0
     NetworkLogging: 1
   DevRegion: sa
-  PunLogging: 2
-  EnableSupportLogger: 1
+  PunLogging: 0
+  EnableSupportLogger: 0
   RunInBackground: 1
   StartInOfflineMode: 0
   RpcList:
@@ -43,15 +43,6 @@ MonoBehaviour:
   - RPC_SetNickname
   - RPC_UpdateSpawnIndex
   - RPC_PushPlayer
-  - ForceVisibilitySync
-  - SyncAllPlayers
-  - RPC_TeleportPlayer
-  - RPC_StartGame
-  - ReceiveChatMessage
-  - RPC_DestroyTrap
-  - RPC_ChangeLayer
-  - RPC_SetButtonActive
-  - RPC_UpdateAliveState
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

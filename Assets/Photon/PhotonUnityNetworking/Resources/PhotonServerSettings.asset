@@ -43,6 +43,13 @@ MonoBehaviour:
   - RPC_SetNickname
   - RPC_UpdateSpawnIndex
   - RPC_PushPlayer
+  - ReceiveChatMessage
+  - RPC_ChangeLayer
+  - RPC_DestroyTrap
+  - RPC_SetButtonActive
+  - RPC_StartGame
+  - RPC_TeleportPlayer
+  - RPC_UpdateAliveState
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json.Bson;
 using Photon.Pun;
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
@@ -23,6 +24,8 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
     [Header("See Player Tags")]
     public KeyCode seeTagKey = KeyCode.Tab;
+
+
 
     private const string PLAYER_TAG_KEY = "playerTag";
 
@@ -58,6 +61,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         photonView = GetComponent<PhotonView>();
         rb = GetComponent<Rigidbody>();
         groundHits = new RaycastHit[maxGroundHits];
+
 
         if (PhotonNetwork.InRoom)
         {
@@ -149,6 +153,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
+ 
         }
     }
 
@@ -156,6 +161,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     {
         if (isStunned || !isAlive) return;
         rb.velocity = new Vector3(rb.velocity.x, JumpForce, rb.velocity.z);
+
     }
 
     public void CheckGrounded()
@@ -164,6 +170,8 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         int hitCount = Physics.SphereCastNonAlloc(sphereCenter, GroundCheckRadius, Vector3.down, groundHits, GroundCheckDistance, groundMask);
 
         isGrounded = hitCount > 0;
+
+
 
         if (isGrounded)
         {
@@ -291,6 +299,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         if (pusherPlayer == null) return;
 
         PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
+
         PlayerModel pusher = null;
 
         foreach (PlayerModel player in allPlayers)

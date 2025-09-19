@@ -24,6 +24,10 @@ public class PlayerView : MonoBehaviourPun
     private int currentSkinIndex = 0;
     private GameObject currentModel;
 
+    private Animator skinModel;
+
+    public Animator SkinModel => skinModel;
+
     public Camera PlayerCamera => playerCamera;
 
     private void Awake()
@@ -144,6 +148,8 @@ public class PlayerView : MonoBehaviourPun
             currentModel.transform.localRotation = Quaternion.identity;
             currentSkinIndex = skinIndex;
         }
+
+        this.skinModel = skinModel.GetComponent<Animator>();
     }
 
     public Vector3 GetCameraForward()

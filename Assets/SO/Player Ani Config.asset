@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5449f520bac2de340998fd24e8ef3d95, type: 3}
+  m_Name: Player Ani Config
+  m_EditorClassIdentifier: 
+  idleAnimations:
+  - {fileID: -203655887218126122, guid: 3dc70f0f88e7c1f4aad83cd41cad5095, type: 3}
+  - {fileID: -203655887218126122, guid: 9f5f2ff9743f4dd42ba5c46e87c1035d, type: 3}
+  mainAnimations:
+  - {fileID: -203655887218126122, guid: cfa549692e005f5459beeb6afc9f792b, type: 3}
+  - {fileID: -203655887218126122, guid: f07acbbd8cfd9774dbcc1a07685cd0ed, type: 3}
+  - {fileID: -203655887218126122, guid: 7c3c8fc22998ba5469d2ab9b2d2fd0bd, type: 3}
+  - {fileID: -203655887218126122, guid: 4759b1ff787e61442a74938c774a742f, type: 3}
+  - {fileID: -203655887218126122, guid: 85a3600a59e0d2447899f5274c2a402e, type: 3}

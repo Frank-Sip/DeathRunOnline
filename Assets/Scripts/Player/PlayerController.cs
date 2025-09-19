@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
@@ -6,13 +7,19 @@ public class PlayerController : MonoBehaviour
     private PlayerView playerView;
     private PlayerNickname playerUI;
     private bool cursorLocked = true;
-    private bool inChatMode = false; 
+    private bool inChatMode = false;
+    [SerializeField] Animator animator;
+
+    public Animator modelSkinAnimator => playerView.SkinModel;
 
     private void Start()
     {
         playerModel = GetComponent<PlayerModel>();
         playerView = GetComponent<PlayerView>();
         playerUI = GetComponent<PlayerNickname>();
+
+        StartCoroutine("GetSkinModel");
+        
 
         bool isLocalPlayer = playerModel.PhotonView.IsMine;
         string playerName = playerModel.PhotonView.Owner.NickName;
@@ -24,9 +31,16 @@ public class PlayerController : MonoBehaviour
             SetCursorLock(true);
         }
     }
+    IEnumerator GetSkinModel()
+    {
+       yield return new WaitForSeconds(0.3f);
+        animator = playerView.SkinModel;
+    }
 
     private void Update()
     {
+        if (animator == null) return;
+
         if (playerModel.PhotonView.IsMine)
         {
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -97,6 +111,7 @@ public class PlayerController : MonoBehaviour
         Vector3 moveDirection = (forward * vertical + right * horizontal).normalized;
 
         playerModel.Move(moveDirection, playerModel.GetRigidbodyVelocity());
+        animator?.SetTrigger("IsRunning");
     }
 
     private void TryInteract()
@@ -104,6 +119,7 @@ public class PlayerController : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             playerModel.TryInteract();
+            animator.SetTrigger("PunchTrigger");
         }
     }
 
@@ -116,7 +132,9 @@ public class PlayerController : MonoBehaviour
         {
             playerModel.Jump();
             playerModel.ConsumeJump();
+            animator.SetTrigger("JumpTrigger");
         }
+
     }
 
     private void HandleCursorToggle()

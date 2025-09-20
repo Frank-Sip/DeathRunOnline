@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json.Bson;
@@ -320,6 +320,11 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
         isStunned = true;
         stunTimer = StunDuration;
+        PlayerController controller = GetComponent<PlayerController>();
+        if (controller != null)
+        {
+            controller.OnReceivePunch();
+        }
 
         Debug.Log($"{PhotonNetwork.LocalPlayer.NickName} was pushed by {pusher.PhotonView.Owner.NickName}");
     }

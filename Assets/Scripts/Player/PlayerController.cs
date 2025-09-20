@@ -8,9 +8,15 @@ public class PlayerController : MonoBehaviour
     private PlayerNickname playerUI;
     private bool cursorLocked = true;
     private bool inChatMode = false;
-    [SerializeField] Animator animator;
 
-    public Animator modelSkinAnimator => playerView.SkinModel;
+    [SerializeField] private Animator animator;
+    private bool animatorReady = false;
+
+    // Estados para el animator
+    private bool wasGrounded = true;
+    private bool wasMoving = false;
+
+    public Animator modelSkinAnimator => playerView?.SkinModel;
 
     private void Start()
     {
@@ -18,8 +24,7 @@ public class PlayerController : MonoBehaviour
         playerView = GetComponent<PlayerView>();
         playerUI = GetComponent<PlayerNickname>();
 
-        StartCoroutine("GetSkinModel");
-        
+        StartCoroutine(InitializeAnimator());
 
         bool isLocalPlayer = playerModel.PhotonView.IsMine;
         string playerName = playerModel.PhotonView.Owner.NickName;
@@ -31,23 +36,67 @@ public class PlayerController : MonoBehaviour
             SetCursorLock(true);
         }
     }
-    IEnumerator GetSkinModel()
+
+    public void OnModelChanged()
     {
-       yield return new WaitForSeconds(0.3f);
-        animator = playerView.SkinModel;
+        animatorReady = false;
+        animator = null;
+        StartCoroutine(InitializeAnimator());
+        Debug.Log("Model changed, reinitializing animator...");
+    }
+
+    private IEnumerator InitializeAnimator()
+    {
+        yield return new WaitForSeconds(0.3f); 
+
+        int maxAttempts = 15;
+        int attempts = 0;
+
+        while (attempts < maxAttempts)
+        {
+            if (playerView != null && playerView.SkinModel != null)
+            {
+                animator = playerView.SkinModel;
+
+                if (animator.runtimeAnimatorController != null)
+                {
+                    animatorReady = true;
+                    InitializeAnimatorStates();
+                    break;
+                }
+            }
+
+            attempts++;
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        if (!animatorReady)
+        {
+            Debug.LogError($"Failed to initialize animator after {maxAttempts} attempts for ");
+        }
+    }
+
+    private void InitializeAnimatorStates()
+    {
+        if (!animatorReady) return;
+
+        SetAnimatorBool("IsGrounded", playerModel.IsGrounded);
+        SetAnimatorBool("IsRunning", false);
+        SetAnimatorBool("IsFalling", false);
+
+        wasGrounded = playerModel.IsGrounded;
+        wasMoving = false;
     }
 
     private void Update()
     {
-        if (animator == null) return;
-
         if (playerModel.PhotonView.IsMine)
         {
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 SetCursorLock(!cursorLocked);
             }
-            
+
             if (!inChatMode && playerModel.isAlive)
             {
                 HandleCursorToggle();
@@ -70,9 +119,46 @@ public class PlayerController : MonoBehaviour
             }
 
             UpdateGameplayLogic();
+            UpdateAnimatorStates();
         }
 
         UpdateVisuals();
+    }
+
+    private void UpdateAnimatorStates()
+    {
+        if (!animatorReady) return;
+
+        bool isGrounded = playerModel.IsGrounded;
+        Vector3 velocity = playerModel.GetRigidbodyVelocity();
+        bool isMovingHorizontally = new Vector3(velocity.x, 0, velocity.z).magnitude > 0.1f;
+        bool isFalling = !isGrounded && velocity.y < -0.1f;
+
+        if (wasGrounded != isGrounded)
+        {
+            SetAnimatorBool("IsGrounded", isGrounded);
+            wasGrounded = isGrounded;
+        }
+
+        if (isGrounded)
+        {
+            if (wasMoving != isMovingHorizontally)
+            {
+                SetAnimatorBool("IsRunning", isMovingHorizontally);
+                wasMoving = isMovingHorizontally;
+            }
+        }
+        else
+        {
+            if (wasMoving)
+            {
+                SetAnimatorBool("IsRunning", false);
+                wasMoving = false;
+            }
+        }
+
+        // Actualizar IsFalling
+        SetAnimatorBool("IsFalling", isFalling);
     }
 
     public void SetChatMode(bool enabled)
@@ -111,7 +197,7 @@ public class PlayerController : MonoBehaviour
         Vector3 moveDirection = (forward * vertical + right * horizontal).normalized;
 
         playerModel.Move(moveDirection, playerModel.GetRigidbodyVelocity());
-        animator?.SetTrigger("IsRunning");
+
     }
 
     private void TryInteract()
@@ -119,7 +205,11 @@ public class PlayerController : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             playerModel.TryInteract();
-            animator.SetTrigger("PunchTrigger");
+
+            if (animatorReady && animator != null)
+            {
+                SetAnimatorTrigger("PunchTrigger");
+            }
         }
     }
 
@@ -132,9 +222,65 @@ public class PlayerController : MonoBehaviour
         {
             playerModel.Jump();
             playerModel.ConsumeJump();
-            animator.SetTrigger("JumpTrigger");
-        }
 
+            if (animatorReady && animator != null)
+            {
+                SetAnimatorTrigger("JumpTrigger");
+            }
+        }
+    }
+
+    // Método público para cuando el jugador recibe un golpe
+    public void OnReceivePunch()
+    {
+        if (animatorReady && animator != null)
+        {
+            SetAnimatorTrigger("ReceivePunchTrigger");
+        }
+    }
+
+    private void SetAnimatorTrigger(string triggerName)
+    {
+        if (animator != null && animator.runtimeAnimatorController != null)
+        {
+            if (HasParameter(triggerName))
+            {
+                animator.SetTrigger(triggerName);
+                Debug.Log($"Trigger activated: {triggerName}");
+            }
+            else
+            {
+                Debug.LogWarning($"Animator parameter '{triggerName}' not found in controller '{animator.runtimeAnimatorController.name}'");
+            }
+        }
+    }
+
+    private void SetAnimatorBool(string paramName, bool value)
+    {
+        if (animator != null && animator.runtimeAnimatorController != null)
+        {
+            if (HasParameter(paramName))
+            {
+                animator.SetBool(paramName, value);
+            }
+            else
+            {
+                Debug.LogWarning($"Animator parameter '{paramName}' not found in controller '{animator.runtimeAnimatorController.name}'");
+            }
+        }
+    }
+
+    private bool HasParameter(string paramName)
+    {
+        if (animator == null || animator.runtimeAnimatorController == null)
+            return false;
+
+        foreach (AnimatorControllerParameter param in animator.parameters)
+        {
+            if (param.name == paramName)
+                return true;
+        }
+        return false;
     }
 
     private void HandleCursorToggle()
@@ -169,5 +315,10 @@ public class PlayerController : MonoBehaviour
     private void UpdateVisuals()
     {
         playerUI.UpdateNameLabelOrientation();
+    }
+
+    public void ReinitializeAnimator()
+    {
+        StartCoroutine(InitializeAnimator());
     }
 }

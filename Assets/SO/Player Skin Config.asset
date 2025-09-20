@@ -16,7 +16,10 @@ MonoBehaviour:
   - skinName: Blue
     modelPrefab: {fileID: 504810766462260066, guid: b5d7eb08e7c2bf64e9311d93369af41e, type: 3}
     skinIcon: {fileID: 21300000, guid: 0ac55f9f886d827408c102bdf33c5ff7, type: 3}
+    runtimeController: {fileID: 9100000, guid: ffb5db90cc485ff42bad6daee586d9de, type: 2}
   - skinName: Red
     modelPrefab: {fileID: 1978010384767679282, guid: 01b7d1983fa5f184781fb4b10655a4f1, type: 3}
     skinIcon: {fileID: 21300000, guid: c887ed2a931c29040bc544cd8c546e9f, type: 3}
+    runtimeController: {fileID: 22100000, guid: a0ccf225d2691b5409a8fcf9c8522e71, type: 2}
   defaultSkinIndex: 0
+  defaultAnimatorController: {fileID: 9100000, guid: ffb5db90cc485ff42bad6daee586d9de, type: 2}

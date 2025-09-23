@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine;
 using Photon.Realtime;
 using Photon.Pun;
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviourPunCallbacks
 {
@@ -25,6 +26,7 @@ public class UIManager : MonoBehaviourPunCallbacks
     [SerializeField] private Button joinRoomButton;
     [SerializeField] private Button joinRandomButton;
     [SerializeField] private Button refreshButton;
+    [SerializeField] private Button backToNicknameButton;
 
     [Header("Room List")]
     [SerializeField] private Transform roomListParent;
@@ -53,7 +55,6 @@ public class UIManager : MonoBehaviourPunCallbacks
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -64,23 +65,60 @@ public class UIManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        string currentScene = SceneManager.GetActiveScene().name;
         Debug.Log($"UIManager Start in scene: {currentScene}");
 
-        if (IsMenuScene())
+        if (IsMenuScene(currentScene))
         {
+            RestoreCursorState();
             InitializeMenuUI();
+            if (PhotonNetwork.IsConnected)
+            {
+                StartCoroutine(HandleReturnFromGame());
+            }
         }
         else
         {
-            if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
-            if (lobbyPanel != null) lobbyPanel.SetActive(false);
+            HideAllCanvases();
         }
     }
 
-    private bool IsMenuScene()
+    private void OnDestroy()
     {
-        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
+    private IEnumerator HandleReturnFromGame()
+    {
+        yield return null; 
+
+        if (PhotonNetwork.InLobby)
+        {
+            ShowLobbyPanel();
+            Debug.Log("Automatically showing lobby after returning from game");
+        }
+        else
+        {
+            Debug.Log("Not in lobby after game, returning to nickname screen");
+            OnBackToNickname();
+        }
+    }
+
+    private void RestoreCursorState()
+    {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+        Debug.Log("Cursor state restored - Visible and unlocked");
+    }
+
+    private bool IsMenuScene(string sceneName = null)
+    {
+        if (string.IsNullOrEmpty(sceneName))
+            sceneName = SceneManager.GetActiveScene().name;
+
         return sceneName == "MainMenu" || sceneName == "Menu" || sceneName == "Lobby";
     }
 
@@ -100,9 +138,10 @@ public class UIManager : MonoBehaviourPunCallbacks
         VerifyName(nameInput.text);
     }
 
-    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
+    private void HideAllCanvases()
     {
-        Debug.Log("Room properties updated");
+        if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
+        if (lobbyPanel != null) lobbyPanel.SetActive(false);
     }
 
     private void InitializeUI()
@@ -113,14 +152,18 @@ public class UIManager : MonoBehaviourPunCallbacks
 
     private void SetupButtons()
     {
-        if (connectionButton != null) connectionButton.onClick.AddListener(OnConnectButton);
-        if (continueButton != null) continueButton.onClick.AddListener(OnContinueButton);
+        if (connectionButton != null)
+            connectionButton.onClick.AddListener(OnConnectButton);
 
-        // Configuración del input de nickname
-        nameInput.onValueChanged.AddListener(VerifyName);
-        nameInput.onSubmit.AddListener(OnInputSubmit);
+        if (continueButton != null)
+            continueButton.onClick.AddListener(OnContinueButton);
 
-        // Configuración del input de room name
+        if (nameInput != null)
+        {
+            nameInput.onValueChanged.AddListener(VerifyName);
+            nameInput.onSubmit.AddListener(OnInputSubmit);
+        }
+
         if (roomNameInput != null)
         {
             roomNameInput.onSubmit.AddListener(OnRoomNameSubmit);
@@ -128,12 +171,38 @@ public class UIManager : MonoBehaviourPunCallbacks
 
         if (createRoomButton != null)
             createRoomButton.onClick.AddListener(OnCreateRoomButton);
+
         if (joinRoomButton != null)
             joinRoomButton.onClick.AddListener(OnJoinRoomByNameButton);
+
         if (joinRandomButton != null)
             joinRandomButton.onClick.AddListener(OnJoinRandomButton);
+
         if (refreshButton != null)
             refreshButton.onClick.AddListener(OnRefreshButton);
+
+        if (backToNicknameButton != null)
+            backToNicknameButton.onClick.AddListener(OnBackToNickname);
+    }
+
+    private void OnBackToNickname()
+    {
+        Debug.Log("Returning to nickname screen");
+
+        if (PhotonNetwork.IsConnected)
+        {
+            PhotonNetwork.Disconnect();
+        }
+
+        if (mainMenuCanvas != null) mainMenuCanvas.SetActive(true);
+        if (lobbyPanel != null) lobbyPanel.SetActive(false);
+
+        RestoreCursorState();
+
+        if (connectionButton != null)
+            connectionButton.interactable = true;
+        if (continueButton != null)
+            continueButton.interactable = !string.IsNullOrWhiteSpace(nickname);
     }
 
     private void VerifyName(string name)
@@ -186,6 +255,7 @@ public class UIManager : MonoBehaviourPunCallbacks
             skinPreview.sprite = skinData.skinIcon;
         }
 
+        // Actualizar interactividad de botones
         for (int i = 0; i < skinButtons.Length; i++)
         {
             if (skinButtons[i] != null)
@@ -239,21 +309,68 @@ public class UIManager : MonoBehaviourPunCallbacks
 
     public void ShowLobbyPanel()
     {
-        if (!IsMenuScene()) return;
+        if (!IsMenuScene())
+        {
+            Debug.LogWarning("Cannot show lobby panel in non-menu scene");
+            return;
+        }
 
-        if (lobbyPanel != null) lobbyPanel.SetActive(true);
-        if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
+        RestoreCursorState();
+
+        if (lobbyPanel != null)
+        {
+            lobbyPanel.SetActive(true);
+            Debug.Log("Lobby panel activated");
+        }
+        else
+        {
+            Debug.LogError("Lobby panel reference is null");
+        }
+
+        if (mainMenuCanvas != null)
+        {
+            mainMenuCanvas.SetActive(false);
+        }
+
         UpdateRoomListUI();
     }
 
-    public void OnSceneChanged()
+    #region Photon Callbacks
+
+    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
     {
-        if (!IsMenuScene())
+        Debug.Log("Room properties updated");
+    }
+
+    public override void OnDisconnected(DisconnectCause cause)
+    {
+        Debug.Log($"Disconnected from Photon: {cause}");
+
+        if (IsMenuScene())
         {
-            if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
+            OnBackToNickname();
+        }
+    }
+
+    public override void OnLeftLobby()
+    {
+        Debug.Log("Left lobby");
+        if (IsMenuScene())
+        {
+            if (mainMenuCanvas != null) mainMenuCanvas.SetActive(true);
             if (lobbyPanel != null) lobbyPanel.SetActive(false);
         }
     }
+
+    public override void OnLeftRoom()
+    {
+        Debug.Log("Left room");
+        RestoreCursorState();
+    }
+
+    #endregion
+
+    #region Room Management
 
     private bool IsMatchmakingReady()
     {
@@ -340,6 +457,10 @@ public class UIManager : MonoBehaviourPunCallbacks
         Debug.Log("Refreshing room list...");
     }
 
+    #endregion
+
+    #region Room List Management
+
     public void UpdateRoomList(List<RoomInfo> roomList)
     {
         if (!IsMenuScene()) return;
@@ -398,7 +519,18 @@ public class UIManager : MonoBehaviourPunCallbacks
         if (playerCountText != null)
         {
             int totalPlayers = 0;
+            foreach (var roomItem in roomListItems)
+            {
+                RoomItemButton itemScript = roomItem.GetComponent<RoomItemButton>();
+                if (itemScript != null)
+                {
+                    // Necesitarías una propiedad pública en RoomItemButton para obtener PlayerCount
+                    // totalPlayers += itemScript.PlayerCount;
+                }
+            }
             playerCountText.text = $"Players Online: {totalPlayers}";
         }
     }
+
+    #endregion
 }

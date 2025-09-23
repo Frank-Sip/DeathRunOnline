@@ -142,7 +142,6 @@ public class PlayerView : MonoBehaviourPun
                 DestroyImmediate(currentModel);
                 skinModel = null;
 
-                // IMPORTANTE: Notificar que el modelo cambió
                 NotifyAnimatorModelChanged();
             }
 
@@ -151,10 +150,8 @@ public class PlayerView : MonoBehaviourPun
             currentModel.transform.localRotation = Quaternion.identity;
             currentSkinIndex = skinIndex;
 
-            // Configurar el Animator ANTES de cualquier sincronización
             SetupAnimator(skinIndex);
 
-            // NUEVO: Reconfigurar Photon Animator View
             ReconfigurePhotonAnimatorView();
         }
     }
@@ -169,13 +166,11 @@ public class PlayerView : MonoBehaviourPun
             Debug.Log("Animator component added to skin model");
         }
 
-        // Asignar el AnimatorController
         RuntimeAnimatorController controller = skinConfig.GetAnimatorController(skinIndex);
         if (controller != null)
         {
             skinModel.runtimeAnimatorController = controller;
 
-            // CRÍTICO: Asegurarse que el Animator está inicializado
             skinModel.Rebind();
 
             Debug.Log($"AnimatorController assigned and rebound: {controller.name}");
@@ -188,12 +183,10 @@ public class PlayerView : MonoBehaviourPun
 
     private void ReconfigurePhotonAnimatorView()
     {
-        // Buscar el PhotonAnimatorView en este GameObject o en el padre
         PhotonAnimatorView photonAnimatorView = GetComponent<PhotonAnimatorView>();
 
         if (photonAnimatorView != null && skinModel != null)
         {
-            // MÉTODO CORRECTO: Usar reflection para acceder al campo privado del animator
             var animatorField = typeof(PhotonAnimatorView).GetField("m_Animator",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
@@ -203,7 +196,6 @@ public class PlayerView : MonoBehaviourPun
                 Debug.Log($"PhotonAnimatorView animator field updated via reflection for {photonView.Owner.NickName}");
             }
 
-            // Alternativa: Reinicializar el componente completo
             RefreshAnimatorViewParameters(photonAnimatorView);
 
             Debug.Log($"PhotonAnimatorView reconfigured for {photonView.Owner.NickName}");
@@ -216,13 +208,11 @@ public class PlayerView : MonoBehaviourPun
 
     private void RefreshAnimatorViewParameters(PhotonAnimatorView photonAnimatorView)
     {
-        // Método más simple y confiable: reinicializar el componente
+
         if (photonView.IsMine)
         {
-            // Desactivar y reactivar para forzar la reinicialización
             photonAnimatorView.enabled = false;
 
-            // Esperar un frame antes de reactivar
             StartCoroutine(ReenablePhotonAnimatorView(photonAnimatorView));
 
             Debug.Log("PhotonAnimatorView scheduled for refresh");
@@ -242,7 +232,6 @@ public class PlayerView : MonoBehaviourPun
 
     private void NotifyAnimatorModelChanged()
     {
-        // Notificar a otros componentes que el modelo cambió
         PlayerController controller = GetComponent<PlayerController>();
         if (controller != null)
         {
@@ -269,7 +258,6 @@ public class PlayerView : MonoBehaviourPun
         return right.normalized;
     }
 
-    // Método para debugging
     [ContextMenu("Debug Animator State")]
     public void DebugAnimatorState()
     {

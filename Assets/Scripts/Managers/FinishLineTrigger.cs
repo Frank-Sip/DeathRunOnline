@@ -19,11 +19,9 @@ public class FinishLineTrigger : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        // Asegurar que el canvas esté desactivado al inicio
         if (winnerCanvas != null)
             winnerCanvas.SetActive(false);
 
-        // Configurar el trigger
         var collider = GetComponent<Collider>();
         if (collider == null)
         {
@@ -37,17 +35,13 @@ public class FinishLineTrigger : MonoBehaviourPunCallbacks
 
     private void OnTriggerEnter(Collider other)
     {
-        // Verificar si el juego ya terminó
         if (gameEnded) return;
 
-        // Verificar si es un jugador con PhotonView
         PhotonView playerPhotonView = other.GetComponent<PhotonView>();
         if (playerPhotonView == null) return;
 
-        // Solo procesar si es el jugador local (evita duplicados)
         if (!playerPhotonView.IsMine) return;
 
-        // Verificar si el jugador es un Runner
         string playerTag = GameTagManager.Instance.GetPlayerTag(playerPhotonView.Owner);
         if (playerTag == null || playerTag.ToLower() != "runner")
         {
@@ -55,11 +49,9 @@ public class FinishLineTrigger : MonoBehaviourPunCallbacks
             return;
         }
 
-        // El primer runner que llegue gana
         string nickname = playerPhotonView.Owner.NickName;
         Debug.Log($"¡{nickname} ha llegado a la meta!");
 
-        // Llamar RPC para mostrar el ganador a todos los jugadores
         photonView.RPC("RPC_ShowWinner", RpcTarget.All, nickname);
     }
 
@@ -71,7 +63,6 @@ public class FinishLineTrigger : MonoBehaviourPunCallbacks
         gameEnded = true;
         winnerNickname = nickname;
 
-        // Mostrar el canvas del ganador
         if (winnerCanvas != null)
         {
             winnerCanvas.SetActive(true);
@@ -84,7 +75,6 @@ public class FinishLineTrigger : MonoBehaviourPunCallbacks
 
         Debug.Log($"¡{nickname} ha ganado la partida!");
 
-        // Iniciar la corrutina para cargar el menú principal
         StartCoroutine(LoadMainMenuAfterDelay());
     }
 
@@ -96,13 +86,11 @@ public class FinishLineTrigger : MonoBehaviourPunCallbacks
         
     }
 
-    // Método público para cambiar el tiempo de display desde el inspector o código
     public void SetDisplayTime(float time)
     {
         displayTime = time;
     }
 
-    // Método público para obtener información del ganador
     public string GetWinnerNickname()
     {
         return winnerNickname;

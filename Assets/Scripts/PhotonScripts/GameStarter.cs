@@ -20,7 +20,7 @@ public class GameStarter : MonoBehaviourPunCallbacks
 
     private void SpawnAtManagerPoint()
     {
-        Transform t = spawnManager.spawnPoint;
-        PhotonNetwork.Instantiate(playerPrefab.name, t.position, t.rotation, 0);
+        Vector3 randomSpawnPosition = spawnManager.GetRandomSpawnPoint();
+        PhotonNetwork.Instantiate(playerPrefab.name, randomSpawnPosition, Quaternion.identity);
     }
 }

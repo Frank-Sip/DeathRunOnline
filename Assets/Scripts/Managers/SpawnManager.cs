@@ -5,19 +5,16 @@ using Photon.Pun;
 
 public class SpawnManager : MonoBehaviourPun
 {
-    [Header("Spawn Settings")]
-    public Transform spawnPoint;
-
     [Header("Layer Assignment")]
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask protectedLayer;
+    
+    private BoxCollider boxCollider;
 
     private void Start()
     {
-        var boxCol = GetComponent<BoxCollider>();
-        boxCol.isTrigger = true;
-
-        transform.position = spawnPoint.position;
+        boxCollider = GetComponent<BoxCollider>();
+        boxCollider.isTrigger = true;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -46,6 +43,18 @@ public class SpawnManager : MonoBehaviourPun
             int normalLayerIndex = GetLayerFromMask(playerLayer);
             photonView.RPC("RPC_ChangeLayer", RpcTarget.All, normalLayerIndex);
         }
+    }
+    
+    public Vector3 GetRandomSpawnPoint()
+    {
+        Vector3 center = boxCollider.bounds.center;
+        Vector3 size = boxCollider.bounds.size;
+
+        float randomX = Random.Range(center.x - size.x / 2, center.x + size.x / 2);
+        float randomZ = Random.Range(center.z - size.z / 2, center.z + size.z / 2);
+        float y = center.y;
+
+        return new Vector3(randomX, y, randomZ);
     }
 
     private int GetLayerFromMask(LayerMask layerMask)

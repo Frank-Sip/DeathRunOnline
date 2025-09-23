@@ -51,6 +51,8 @@ MonoBehaviour:
   - RPC_TeleportPlayer
   - RPC_UpdateAliveState
   - RPC_ShowWinner
+  - RPC_ActivateTrap
+  - RPC_HandleCollision
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -521,11 +521,13 @@ public class UIManager : MonoBehaviourPunCallbacks
             int totalPlayers = 0;
             foreach (var roomItem in roomListItems)
             {
-                RoomItemButton itemScript = roomItem.GetComponent<RoomItemButton>();
-                if (itemScript != null)
+                if (roomItem != null)
                 {
-                    // Necesitarías una propiedad pública en RoomItemButton para obtener PlayerCount
-                    // totalPlayers += itemScript.PlayerCount;
+                    RoomItemButton itemScript = roomItem.GetComponent<RoomItemButton>();
+                    if (itemScript != null)
+                    {
+                        totalPlayers += itemScript.PlayerCount; // Ahora funciona con la propiedad pública
+                    }
                 }
             }
             playerCountText.text = $"Players Online: {totalPlayers}";

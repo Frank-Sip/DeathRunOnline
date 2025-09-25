@@ -311,7 +311,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
         if (pusher == null) return;
 
-        Vector3 pushDirection = (transform.position - pusher.transform.position).normalized;
+        Vector3 pushDirection = pusher.transform.forward;
         pushDirection.y = 0;
 
         rb.AddForce(pushDirection * PushForce, ForceMode.Impulse);

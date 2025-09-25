@@ -255,7 +255,6 @@ public class UIManager : MonoBehaviourPunCallbacks
             skinPreview.sprite = skinData.skinIcon;
         }
 
-        // Actualizar interactividad de botones
         for (int i = 0; i < skinButtons.Length; i++)
         {
             if (skinButtons[i] != null)

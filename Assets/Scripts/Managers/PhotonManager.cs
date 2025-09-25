@@ -36,10 +36,6 @@ public class PhotonManager : MonoBehaviourPunCallbacks
             Debug.Log("Connecting to Photon...");
             PhotonNetwork.ConnectUsingSettings();
         }
-        //else if (!PhotonNetwork.InLobby)
-        //{
-        //    JoinLobby();
-        //}
     }
 
     public void JoinLobby()

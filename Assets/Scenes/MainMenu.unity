@@ -2392,7 +2392,7 @@ GameObject:
   - component: {fileID: 1327078945}
   - component: {fileID: 1327078944}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: SelecSkinText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2413,10 +2413,10 @@ RectTransform:
   m_Father: {fileID: 1647286363}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.032866213, y: 0.64911777}
-  m_AnchorMax: {x: 0.30400002, y: 0.8056766}
-  m_AnchoredPosition: {x: 0, y: -4}
-  m_SizeDelta: {x: 0.5, y: -11}
+  m_AnchorMin: {x: 0.09073243, y: 0.5537359}
+  m_AnchorMax: {x: 0.36086622, y: 0.6747647}
+  m_AnchoredPosition: {x: 0.5, y: 0.5}
+  m_SizeDelta: {x: 1.5, y: 3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1327078944
 MonoBehaviour:

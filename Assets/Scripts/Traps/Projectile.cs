@@ -17,7 +17,7 @@ public class Projectile : MonoBehaviourPun
         }
         else
         {
-            rb.isKinematic = true; // otros clientes solo ven sync
+            rb.isKinematic = true;
         }
     }
 }

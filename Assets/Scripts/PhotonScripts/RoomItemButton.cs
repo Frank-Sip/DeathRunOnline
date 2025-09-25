@@ -7,7 +7,7 @@ public class RoomItemButton : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private TMP_Text roomNameText;
     [SerializeField] private TMP_Text playerCountText;
-    [SerializeField] private Button joinButton; // Cambio: ahora es el botón hijo específico
+    [SerializeField] private Button joinButton;
 
     public string RoomName { get; private set; }
     public int PlayerCount { get; private set; } 

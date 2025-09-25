@@ -12,7 +12,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Animator animator;
     private bool animatorReady = false;
 
-    // Estados para el animator
     private bool wasGrounded = true;
     private bool wasMoving = false;
 
@@ -230,7 +229,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // Método público para cuando el jugador recibe un golpe
     public void OnReceivePunch()
     {
         if (animatorReady && animator != null)

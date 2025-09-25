@@ -25,8 +25,6 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     [Header("See Player Tags")]
     public KeyCode seeTagKey = KeyCode.Tab;
 
-
-
     private const string PLAYER_TAG_KEY = "playerTag";
 
     private PhotonView photonView;

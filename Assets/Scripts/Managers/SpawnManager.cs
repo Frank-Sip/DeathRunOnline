@@ -27,7 +27,7 @@ public class SpawnManager : MonoBehaviourPun
         if (other.gameObject.layer == normalLayerIndex)
         {
             int protectedLayerIndex = GetLayerFromMask(protectedLayer);
-            photonView.RPC("RPC_ChangeLayer", RpcTarget.All, protectedLayerIndex);
+            photonView.RPC("RPC_ChangeLayer", RpcTarget.AllBuffered, protectedLayerIndex);
         }
     }
 

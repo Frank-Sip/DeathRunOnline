@@ -1,20 +1,32 @@
 ﻿using System.Collections;
 using UnityEngine;
 using Photon.Pun;
+using Photon.Realtime;
 
 public class StartGameButton : MonoBehaviourPun, IInteractable
 {
     [SerializeField] private GameTagManager gameTagManager;
     [SerializeField] private Transform killerSpawnPoint;
-    
+    [SerializeField] private int minimumPlayersRequired = 2;
+
     private bool isActive = true;
 
     public void Interact()
     {
         if (!isActive) return;
+        if (!HasMinimumPlayers())
+        {
+            Debug.Log($"cant start game. you need at least {minimumPlayersRequired} players.actual players {PhotonNetwork.PlayerList.Length}");
+            return;
+        }
         photonView.RPC("RPC_SetButtonActive", RpcTarget.All, false);
         photonView.RPC("RPC_StartGame", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
     }
+    private bool HasMinimumPlayers()
+    {
+        return PhotonNetwork.PlayerList.Length >= minimumPlayersRequired;
+    }
+
 
     [PunRPC]
     private void RPC_SetButtonActive(bool active)
@@ -33,10 +45,20 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
 
     private IEnumerator StartGameSequence()
     {
+        SetRoomPrivate();
         gameTagManager.AssignRandomTags();
         GameManager.Instance.StartMatch();
         yield return new WaitForSeconds(0.5f);
         TeleportKillerToSpawn();
+    }
+    private void SetRoomPrivate()
+    {
+        if (PhotonNetwork.CurrentRoom != null)
+        {
+            Room currentRoom = PhotonNetwork.CurrentRoom;
+            currentRoom.IsOpen = false;  
+            currentRoom.IsVisible = false; 
+        }
     }
 
     private void TeleportKillerToSpawn()

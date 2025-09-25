@@ -60,6 +60,7 @@ MonoBehaviour:
   - RPC_DeclareKillerVictory
   - RPC_KillerWin
   - RPC_ShowKillerVictory
+  - RPC_RemovePreLobbyWall
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

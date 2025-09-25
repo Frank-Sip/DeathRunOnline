@@ -7,6 +7,7 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
 {
     [SerializeField] private GameTagManager gameTagManager;
     [SerializeField] private Transform killerSpawnPoint;
+    [SerializeField] private GameObject preLobbyWall;
     [SerializeField] private int minimumPlayersRequired = 2;
 
     private bool isActive = true;
@@ -46,10 +47,21 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
     private IEnumerator StartGameSequence()
     {
         SetRoomPrivate();
+        photonView.RPC("RPC_RemovePreLobbyWall", RpcTarget.All);
         gameTagManager.AssignRandomTags();
         GameManager.Instance.StartMatch();
         yield return new WaitForSeconds(0.5f);
         TeleportKillerToSpawn();
+    }
+
+    [PunRPC]
+    private void RPC_RemovePreLobbyWall()
+    {
+        if (preLobbyWall != null)
+        {
+            preLobbyWall.SetActive(false);
+            Debug.Log("Pre-lobby wall removed - Game area is now accessible");
+        }
     }
     private void SetRoomPrivate()
     {

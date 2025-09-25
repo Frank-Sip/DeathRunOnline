@@ -34,6 +34,7 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
     private IEnumerator StartGameSequence()
     {
         gameTagManager.AssignRandomTags();
+        GameManager.Instance.StartMatch();
         yield return new WaitForSeconds(0.5f);
         TeleportKillerToSpawn();
     }

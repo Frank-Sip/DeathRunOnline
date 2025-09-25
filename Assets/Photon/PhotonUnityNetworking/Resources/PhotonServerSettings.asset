@@ -57,6 +57,9 @@ MonoBehaviour:
   - RPC_SetRunners
   - RPC_ShowKillerWin
   - RPC_KillerVictory
+  - RPC_DeclareKillerVictory
+  - RPC_KillerWin
+  - RPC_ShowKillerVictory
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

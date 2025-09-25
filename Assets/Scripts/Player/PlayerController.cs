@@ -156,7 +156,6 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // Actualizar IsFalling
         SetAnimatorBool("IsFalling", isFalling);
     }
 

@@ -525,7 +525,7 @@ public class UIManager : MonoBehaviourPunCallbacks
                     RoomItemButton itemScript = roomItem.GetComponent<RoomItemButton>();
                     if (itemScript != null)
                     {
-                        totalPlayers += itemScript.PlayerCount; // Ahora funciona con la propiedad pública
+                        totalPlayers += itemScript.PlayerCount;
                     }
                 }
             }

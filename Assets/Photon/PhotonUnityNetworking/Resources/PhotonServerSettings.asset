@@ -61,6 +61,10 @@ MonoBehaviour:
   - RPC_KillerWin
   - RPC_ShowKillerVictory
   - RPC_RemovePreLobbyWall
+  - RPC_EndGame
+  - RPC_PlayerReady
+  - RPC_ScorePoint
+  - RPC_UpdateScore
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -9,21 +9,17 @@ public class PlayerView : MonoBehaviourPun
     [SerializeField] private CinemachineFreeLook freeLookCamera;
     [SerializeField] private CinemachineBrain cinemachineBrain;
 
-    [Header("Mouse Settings")]
-    [SerializeField] private float mouseSensitivity = 2f;
-    [SerializeField] private float mousePitchTopLimit = -80f;
-    [SerializeField] private float mousePitchLowLimit = 80f;
-
     [Header("Skin Settings")]
     [SerializeField] private PlayerSkinConfig skinConfig;
     [SerializeField] private Transform modelParent;
 
-    private float cameraPitch;
+    [Header("Model Children")]
+    [SerializeField] private GameObject[] modelChildren; 
+
     private const string SKIN_KEY = "playerSkin";
     private PhotonView photonView;
     private int currentSkinIndex = 0;
-    private GameObject currentModel;
-
+    private GameObject currentActiveModel;
     private Animator skinModel;
 
     public Animator SkinModel => skinModel;
@@ -32,6 +28,9 @@ public class PlayerView : MonoBehaviourPun
     private void Awake()
     {
         photonView = GetComponent<PhotonView>();
+
+        DeactivateAllModels();
+
         if (photonView.IsMine)
         {
             ConfigureLocalPlayer();
@@ -82,7 +81,7 @@ public class PlayerView : MonoBehaviourPun
             freeLookCamera.gameObject.SetActive(false);
         }
 
-        Debug.Log($"❌ Remote player camera disabled for {photonView.Owner.NickName}");
+        Debug.Log($" Remote player camera disabled for {photonView.Owner.NickName}");
     }
 
     private void Start()
@@ -131,46 +130,65 @@ public class PlayerView : MonoBehaviourPun
             ApplySkin(skinConfig.defaultSkinIndex);
         }
     }
+    private void DeactivateAllModels()
+    {
+        foreach (GameObject model in modelChildren)
+        {
+            if (model != null)
+            {
+                model.SetActive(false);
+            }
+        }
+        currentActiveModel = null;
+        skinModel = null;
+    }
 
     private void ApplySkin(int skinIndex)
     {
-        GameObject skinModelPrefab = skinConfig.GetSkinModel(skinIndex);
-        if (skinModelPrefab != null)
+        if (skinIndex < 0 || skinIndex >= modelChildren.Length)
         {
-            if (currentModel != null)
-            {
-                DestroyImmediate(currentModel);
-                skinModel = null;
+            Debug.LogError($"Invalid skin index: {skinIndex}. Using default.");
+            skinIndex = skinConfig.defaultSkinIndex;
+        }
 
-                NotifyAnimatorModelChanged();
-            }
+        if (currentActiveModel != null)
+        {
+            currentActiveModel.SetActive(false);
+            NotifyAnimatorModelChanged();
+        }
 
-            currentModel = Instantiate(skinModelPrefab, modelParent);
-            currentModel.transform.localPosition = Vector3.zero;
-            currentModel.transform.localRotation = Quaternion.identity;
+        currentActiveModel = modelChildren[skinIndex];
+
+        if (currentActiveModel != null)
+        {
+            currentActiveModel.SetActive(true);
             currentSkinIndex = skinIndex;
 
             SetupAnimator(skinIndex);
-
             ReconfigurePhotonAnimatorView();
+
+            Debug.Log($"Activated skin model {skinIndex} for {photonView.Owner.NickName}");
+        }
+        else
+        {
+            Debug.LogError($"Model child at index {skinIndex} is null!");
         }
     }
 
     private void SetupAnimator(int skinIndex)
     {
-        skinModel = currentModel.GetComponent<Animator>();
+        skinModel = currentActiveModel.GetComponent<Animator>();
 
         if (skinModel == null)
         {
-            skinModel = currentModel.AddComponent<Animator>();
-            Debug.Log("Animator component added to skin model");
+            Debug.LogError($"No Animator component found on model {currentActiveModel.name}!");
+            return;
         }
 
         RuntimeAnimatorController controller = skinConfig.GetAnimatorController(skinIndex);
         if (controller != null)
         {
             skinModel.runtimeAnimatorController = controller;
-
             skinModel.Rebind();
 
             Debug.Log($"AnimatorController assigned and rebound: {controller.name}");
@@ -208,13 +226,10 @@ public class PlayerView : MonoBehaviourPun
 
     private void RefreshAnimatorViewParameters(PhotonAnimatorView photonAnimatorView)
     {
-
         if (photonView.IsMine)
         {
             photonAnimatorView.enabled = false;
-
             StartCoroutine(ReenablePhotonAnimatorView(photonAnimatorView));
-
             Debug.Log("PhotonAnimatorView scheduled for refresh");
         }
     }
@@ -265,6 +280,7 @@ public class PlayerView : MonoBehaviourPun
         Debug.Log($"SkinModel null: {skinModel == null}");
         Debug.Log($"RuntimeController null: {(skinModel?.runtimeAnimatorController == null)}");
         Debug.Log($"PhotonView IsMine: {photonView.IsMine}");
+        Debug.Log($"Current Active Model: {(currentActiveModel != null ? currentActiveModel.name : "null")}");
 
         PhotonAnimatorView pav = GetComponent<PhotonAnimatorView>();
         Debug.Log($"PhotonAnimatorView null: {pav == null}");

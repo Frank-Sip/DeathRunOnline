@@ -4,7 +4,7 @@ using System.Collections;
 
 public class GameStarter : MonoBehaviourPunCallbacks
 {
-    [SerializeField] private PhotonView playerPrefab;
+    [SerializeField] private string playerPrefabName = "Player"; 
     [SerializeField] private SpawnManager spawnManager;
 
     private void Start()
@@ -21,6 +21,9 @@ public class GameStarter : MonoBehaviourPunCallbacks
     private void SpawnAtManagerPoint()
     {
         Vector3 randomSpawnPosition = spawnManager.GetRandomSpawnPoint();
-        PhotonNetwork.Instantiate(playerPrefab.name, randomSpawnPosition, Quaternion.identity);
+
+        PhotonNetwork.Instantiate(playerPrefabName, randomSpawnPosition, Quaternion.identity);
+
+        Debug.Log($"Player spawned at {randomSpawnPosition} for {PhotonNetwork.LocalPlayer.NickName}");
     }
 }

@@ -90,6 +90,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         Debug.Log($"Match started with {aliveRunnerActors.Count} runners");
     }
+
     public void ProcessRunnerVictory(string runnerNickname)
     {
         if (gameEnded) return;
@@ -134,7 +135,31 @@ public class GameManager : MonoBehaviourPunCallbacks
     private IEnumerator LoadMainMenuAfterDelay()
     {
         yield return new WaitForSeconds(displayTime);
+
+        ClearAllPlayerTags();
+
         PhotonNetwork.LoadLevel(mainMenuSceneName);
+    }
+
+    private void ClearAllPlayerTags()
+    {
+        if (PhotonNetwork.LocalPlayer != null)
+        {
+            photonView.RPC("RPC_ClearPlayerTag", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
+        }
+    }
+
+    [PunRPC]
+    private void RPC_ClearPlayerTag(int actorNumber)
+    {
+        Photon.Realtime.Player player = PhotonNetwork.CurrentRoom?.GetPlayer(actorNumber);
+        if (player != null)
+        {
+            ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
+            props["playerTag"] = null; 
+            player.SetCustomProperties(props);
+            Debug.Log($"Tag cleared for player: {player.NickName}");
+        }
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)

@@ -98,9 +98,19 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public override void OnJoinedLobby()
     {
         Debug.Log("Joined Lobby Successfully");
+        ClearLocalPlayerTag();
         UIManager.Instance.ShowLobbyPanel();
     }
-
+    private void ClearLocalPlayerTag()
+    {
+        if (PhotonNetwork.LocalPlayer != null)
+        {
+            ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
+            props["playerTag"] = null;
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+            Debug.Log($"Local player tag cleared for: {PhotonNetwork.LocalPlayer.NickName}");
+        }
+    }
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
     {
         Debug.Log($"Room list updated. Count: {roomList.Count}");

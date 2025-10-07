@@ -24,7 +24,6 @@ public class GameTagManager : MonoBehaviourPun
     public void SetPlayerTag(Photon.Realtime.Player player, string tagName)
     {
         var tagConfig = labelConfig.GetTagConfig(tagName);
-
         Hashtable props = new Hashtable();
         props["playerTag"] = tagName;
         player.SetCustomProperties(props);
@@ -35,10 +34,8 @@ public class GameTagManager : MonoBehaviourPun
         var players = PhotonNetwork.PlayerList;
         var killerTag = System.Array.Find(labelConfig.availableTags, tag => tag.tagName.ToLower() == "killer");
         var runnerTag = System.Array.Find(labelConfig.availableTags, tag => tag.tagName.ToLower() == "runner");
-        
+
         int killerIndex = Random.Range(0, players.Length);
-
-
         for (int i = 0; i < players.Length; i++)
         {
             if (i == killerIndex)
@@ -51,6 +48,7 @@ public class GameTagManager : MonoBehaviourPun
             }
         }
 
+        Debug.Log($"Tags assigned: 1 Killer, {players.Length - 1} Runners");
     }
 
     public void SetAllPlayersTag(string tagName)
@@ -59,15 +57,30 @@ public class GameTagManager : MonoBehaviourPun
         {
             SetPlayerTag(player, tagName);
         }
-
         Debug.Log($"Todos los jugadores ahora tienen el tag: {tagName}");
+    }
+
+    public void ClearAllPlayerTags()
+    {
+        foreach (var player in PhotonNetwork.PlayerList)
+        {
+            ClearPlayerTag(player);
+        }
+        Debug.Log("All player tags cleared");
+    }
+
+    public void ClearPlayerTag(Photon.Realtime.Player player)
+    {
+        Hashtable props = new Hashtable();
+        props["playerTag"] = null;
+        player.SetCustomProperties(props);
     }
 
     public string GetPlayerTag(Photon.Realtime.Player player)
     {
         if (player.CustomProperties.TryGetValue("playerTag", out object tagValue))
         {
-            return tagValue.ToString();
+            return tagValue?.ToString();
         }
         return null;
     }

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.03588759, g: 0.07924773, b: 0.04336013, a: 1}
+  m_IndirectSpecularColor: {r: 0.0359372, g: 0.07924751, b: 0.043310292, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2155,8 +2155,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 702fa8035e9457e47a529d6bca4bf0cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  killerVictoryCanvas: {fileID: 1917895116}
-  killerVictoryText: {fileID: 215602025}
+  victoryCanvas: {fileID: 1917895116}
+  victoryText: {fileID: 215602025}
   displayTime: 3
   mainMenuSceneName: MainMenu
 --- !u!4 &671944457
@@ -2984,7 +2984,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1fc567ae553c3e438256082d9f9e6a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 8371059747553200921, guid: 96d2cf845445b5a4a8428d953b02881f, type: 3}
+  playerPrefabName: Player
   spawnManager: {fileID: 184666481}
 --- !u!4 &888607299
 Transform:
@@ -6455,10 +6455,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28c28a188d0657a4689954d0ea685c50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  winnerCanvas: {fileID: 1917895116}
-  winnerText: {fileID: 215602025}
-  displayTime: 3
-  mainMenuSceneName: MainMenu
 --- !u!65 &1838626825
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6480,7 +6476,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1838626822}
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -380, y: 1.72, z: 0.2}
+  m_LocalPosition: {x: -51.2, y: 1.72, z: 0.2}
   m_LocalScale: {x: 45.3112, y: 5.823417, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -1,27 +1,10 @@
 ﻿using UnityEngine;
 using Photon.Pun;
-using TMPro;
-using System.Collections;
-using UnityEngine.SceneManagement;
 
 public class FinishLineTrigger : MonoBehaviourPunCallbacks
 {
-    [Header("UI References")]
-    [SerializeField] private GameObject winnerCanvas;
-    [SerializeField] private TMP_Text winnerText;
-
-    [Header("Game Settings")]
-    [SerializeField] private float displayTime = 3f;
-    [SerializeField] private string mainMenuSceneName = "MainMenu";
-
-    private bool gameEnded = false;
-    private string winnerNickname = "";
-
     private void Start()
     {
-        if (winnerCanvas != null)
-            winnerCanvas.SetActive(false);
-
         var collider = GetComponent<Collider>();
         if (collider == null)
         {
@@ -35,8 +18,8 @@ public class FinishLineTrigger : MonoBehaviourPunCallbacks
 
     private void OnTriggerEnter(Collider other)
     {
-        if (gameEnded) return;
-
+        if (GameManager.Instance == null || GameManager.Instance.HasGameEnded())
+            return;
         PhotonView playerPhotonView = other.GetComponent<PhotonView>();
         if (playerPhotonView == null) return;
 
@@ -50,54 +33,21 @@ public class FinishLineTrigger : MonoBehaviourPunCallbacks
         }
 
         string nickname = playerPhotonView.Owner.NickName;
-        Debug.Log($"¡{nickname} ha llegado a la meta!");
+        Debug.Log($"FinishLineTrigger: {nickname} alcanzó la meta. Notificando al GameManager...");
 
-        photonView.RPC("RPC_ShowWinner", RpcTarget.All, nickname);
+        photonView.RPC("RPC_NotifyRunnerWin", RpcTarget.All, nickname);
     }
 
     [PunRPC]
-    private void RPC_ShowWinner(string nickname)
+    private void RPC_NotifyRunnerWin(string nickname)
     {
-        if (gameEnded) return;
-
-        gameEnded = true;
-        winnerNickname = nickname;
-
-        if (winnerCanvas != null)
+        if (GameManager.Instance != null)
         {
-            winnerCanvas.SetActive(true);
-
-            if (winnerText != null)
-            {
-                winnerText.text = $"{nickname} Ganó!";
-            }
+            GameManager.Instance.ProcessRunnerVictory(nickname);
         }
-
-        Debug.Log($"¡{nickname} ha ganado la partida!");
-
-        StartCoroutine(LoadMainMenuAfterDelay());
-    }
-
-    private IEnumerator LoadMainMenuAfterDelay()
-    {
-        yield return new WaitForSeconds(displayTime);
-
-        PhotonNetwork.LoadLevel(mainMenuSceneName);
-        
-    }
-
-    public void SetDisplayTime(float time)
-    {
-        displayTime = time;
-    }
-
-    public string GetWinnerNickname()
-    {
-        return winnerNickname;
-    }
-
-    public bool HasGameEnded()
-    {
-        return gameEnded;
+        else
+        {
+            Debug.LogError("FinishLineTrigger: GameManager.Instance es null!");
+        }
     }
 }

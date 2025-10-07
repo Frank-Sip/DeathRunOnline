@@ -9,9 +9,11 @@ public class GameManager : MonoBehaviourPunCallbacks
 {
     public static GameManager Instance;
 
-    [Header("UI")]
-    [SerializeField] private GameObject killerVictoryCanvas;
-    [SerializeField] private TMP_Text killerVictoryText;
+    [Header("Victory UI")]
+    [SerializeField] private GameObject victoryCanvas;
+    [SerializeField] private TMP_Text victoryText;
+
+    [Header("Game Settings")]
     [SerializeField] private float displayTime = 3f;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
@@ -31,16 +33,16 @@ public class GameManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        if (killerVictoryCanvas != null)
-            killerVictoryCanvas.SetActive(false);
+        if (victoryCanvas != null)
+            victoryCanvas.SetActive(false);
     }
 
     private void Update()
     {
         if (!matchStarted || gameEnded) return;
-        
+
         RefreshAliveRunners();
-        
+
         if (aliveRunnerActors.Count == 0)
         {
             CheckKillerVictory();
@@ -50,9 +52,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     private void RefreshAliveRunners()
     {
         aliveRunnerActors.Clear();
-        
+
         PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
-        
+
         foreach (PlayerModel player in allPlayers)
         {
             if (player.isAlive && IsPlayerRunner(player.PhotonView.Owner))
@@ -88,6 +90,13 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         Debug.Log($"Match started with {aliveRunnerActors.Count} runners");
     }
+    public void ProcessRunnerVictory(string runnerNickname)
+    {
+        if (gameEnded) return;
+
+        Debug.Log($"GameManager: Procesando victoria de Runner: {runnerNickname}");
+        photonView.RPC("RPC_ShowVictory", RpcTarget.All, runnerNickname, "Runner");
+    }
 
     private void CheckKillerVictory()
     {
@@ -96,29 +105,29 @@ public class GameManager : MonoBehaviourPunCallbacks
         Player killer = GameTagManager.Instance.GetKillerPlayer();
         if (killer != null)
         {
-            photonView.RPC("RPC_ShowKillerVictory", RpcTarget.All, killer.NickName);
+            Debug.Log($"GameManager: Procesando victoria de Killer: {killer.NickName}");
+            photonView.RPC("RPC_ShowVictory", RpcTarget.All, killer.NickName, "Killer");
         }
     }
 
     [PunRPC]
-    private void RPC_ShowKillerVictory(string killerNickname)
+    private void RPC_ShowVictory(string winnerNickname, string winnerType)
     {
         if (gameEnded) return;
 
         gameEnded = true;
         matchStarted = false;
 
-        if (killerVictoryCanvas != null)
+        if (victoryCanvas != null)
         {
-            killerVictoryCanvas.SetActive(true);
-
-            if (killerVictoryText != null)
+            victoryCanvas.SetActive(true);
+            if (victoryText != null)
             {
-                killerVictoryText.text = $"{killerNickname} Ganó!";
+                victoryText.text = $"{winnerNickname} Ganó!";
             }
         }
 
-        Debug.Log($"¡{killerNickname} (Killer) ha ganado la partida!");
+        Debug.Log($"¡{winnerNickname} ({winnerType}) ha ganado la partida!");
         StartCoroutine(LoadMainMenuAfterDelay());
     }
 

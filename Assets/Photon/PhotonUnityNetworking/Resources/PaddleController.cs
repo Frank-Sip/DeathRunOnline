@@ -63,6 +63,7 @@ public class PaddleController : MonoBehaviourPun
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+		// Las paletas no colisionan entre ellas.
         if (collision.gameObject.CompareTag("Paddle"))
         {
             Physics2D.IgnoreCollision(GetComponent<Collider2D>(), collision.collider);

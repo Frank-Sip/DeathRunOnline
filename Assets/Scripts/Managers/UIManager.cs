@@ -4,10 +4,9 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine;
 using Photon.Realtime;
-using Photon.Pun;
 using UnityEngine.SceneManagement;
 
-public class UIManager : MonoBehaviourPunCallbacks
+public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
 
@@ -50,6 +49,7 @@ public class UIManager : MonoBehaviourPunCallbacks
     private Coroutine joinRoomByNameRoutine;
     private Coroutine joinOrCreateRoutine;
 
+    #region Unity Lifecycle
     private void Awake()
     {
         if (Instance == null)
@@ -72,7 +72,9 @@ public class UIManager : MonoBehaviourPunCallbacks
         {
             RestoreCursorState();
             InitializeMenuUI();
-            if (PhotonNetwork.IsConnected)
+            SubscribeToPhotonEvents();
+
+            if (PhotonManager.Instance != null && PhotonManager.Instance.IsConnected())
             {
                 StartCoroutine(HandleReturnFromGame());
             }
@@ -89,13 +91,89 @@ public class UIManager : MonoBehaviourPunCallbacks
         {
             Instance = null;
         }
+        UnsubscribeFromPhotonEvents();
+    }
+    #endregion
+
+    #region Event Subscription 
+    private void SubscribeToPhotonEvents()
+    {
+        if (PhotonManager.Instance != null)
+        {
+            PhotonManager.Instance.OnLobbyJoined += HandleLobbyJoined;
+            PhotonManager.Instance.OnRoomListUpdated += HandleRoomListUpdated;
+            PhotonManager.Instance.OnPhotonDisconnected += HandleDisconnected;
+            PhotonManager.Instance.OnLobbyLeft += HandleLeftLobby;
+            PhotonManager.Instance.OnRoomLeft += HandleLeftRoom;
+            PhotonManager.Instance.OnRoomPropertiesChanged += HandleRoomPropertiesUpdate;
+        }
     }
 
+    private void UnsubscribeFromPhotonEvents()
+    {
+        if (PhotonManager.Instance != null)
+        {
+            PhotonManager.Instance.OnLobbyJoined -= HandleLobbyJoined;
+            PhotonManager.Instance.OnRoomListUpdated -= HandleRoomListUpdated;
+            PhotonManager.Instance.OnPhotonDisconnected -= HandleDisconnected;
+            PhotonManager.Instance.OnLobbyLeft -= HandleLeftLobby;
+            PhotonManager.Instance.OnRoomLeft -= HandleLeftRoom;
+            PhotonManager.Instance.OnRoomPropertiesChanged -= HandleRoomPropertiesUpdate;
+        }
+    }
+    #endregion
+
+    #region Photon Event Handlers - REEMPLAZAN LOS CALLBACKS
+
+    private void HandleLobbyJoined()
+    {
+        Debug.Log("UI: Lobby joined event received");
+        ShowLobbyPanel();
+    }
+
+    private void HandleRoomListUpdated(List<RoomInfo> roomList)
+    {
+        Debug.Log($"UI: Room list updated with {roomList.Count} rooms");
+        UpdateRoomList(roomList);
+    }
+
+    private void HandleDisconnected(DisconnectCause cause)
+    {
+        Debug.Log($"UI: Disconnected event received: {cause}");
+        if (IsMenuScene())
+        {
+            OnBackToNickname();
+        }
+    }
+
+    private void HandleLeftLobby()
+    {
+        Debug.Log("UI: Left lobby event received");
+        if (IsMenuScene())
+        {
+            if (mainMenuCanvas != null) mainMenuCanvas.SetActive(true);
+            if (lobbyPanel != null) lobbyPanel.SetActive(false);
+        }
+    }
+
+    private void HandleLeftRoom()
+    {
+        Debug.Log("UI: Left room event received");
+        RestoreCursorState();
+    }
+
+    private void HandleRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
+    {
+        Debug.Log("UI: Room properties updated");
+    }
+    #endregion
+
+    #region Initialization
     private IEnumerator HandleReturnFromGame()
     {
-        yield return null; 
+        yield return null;
 
-        if (PhotonNetwork.InLobby)
+        if (PhotonManager.Instance != null && PhotonManager.Instance.IsInLobby())
         {
             ShowLobbyPanel();
             Debug.Log("Automatically showing lobby after returning from game");
@@ -149,7 +227,9 @@ public class UIManager : MonoBehaviourPunCallbacks
         if (mainMenuCanvas != null) mainMenuCanvas.SetActive(true);
         if (lobbyPanel != null) lobbyPanel.SetActive(false);
     }
+    #endregion
 
+    #region Button Setup
     private void SetupButtons()
     {
         if (connectionButton != null)
@@ -189,9 +269,9 @@ public class UIManager : MonoBehaviourPunCallbacks
     {
         Debug.Log("Returning to nickname screen");
 
-        if (PhotonNetwork.IsConnected)
+        if (PhotonManager.Instance != null && PhotonManager.Instance.IsConnected())
         {
-            PhotonNetwork.Disconnect();
+            PhotonManager.Instance.DisconnectFromPhoton();
         }
 
         if (mainMenuCanvas != null) mainMenuCanvas.SetActive(true);
@@ -214,7 +294,9 @@ public class UIManager : MonoBehaviourPunCallbacks
         if (isValid)
             nickname = name;
     }
+    #endregion
 
+    #region Skin Selection
     private void SetupSkinButtons()
     {
         if (skinConfig == null) return;
@@ -261,7 +343,9 @@ public class UIManager : MonoBehaviourPunCallbacks
                 skinButtons[i].interactable = (i != skinIndex);
         }
     }
+    #endregion
 
+    #region Input Handlers
     private void OnInputSubmit(string _)
     {
         if (continueButton != null && continueButton.interactable)
@@ -305,7 +389,9 @@ public class UIManager : MonoBehaviourPunCallbacks
 
         PhotonManager.Instance.ConnectToPhoton(nickname, selectedSkinIndex);
     }
+    #endregion
 
+    #region Lobby Panel
     public void ShowLobbyPanel()
     {
         if (!IsMenuScene())
@@ -333,53 +419,14 @@ public class UIManager : MonoBehaviourPunCallbacks
 
         UpdateRoomListUI();
     }
-
-    #region Photon Callbacks
-
-    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
-    {
-        Debug.Log("Room properties updated");
-    }
-
-    public override void OnDisconnected(DisconnectCause cause)
-    {
-        Debug.Log($"Disconnected from Photon: {cause}");
-
-        if (IsMenuScene())
-        {
-            OnBackToNickname();
-        }
-    }
-
-    public override void OnLeftLobby()
-    {
-        Debug.Log("Left lobby");
-        if (IsMenuScene())
-        {
-            if (mainMenuCanvas != null) mainMenuCanvas.SetActive(true);
-            if (lobbyPanel != null) lobbyPanel.SetActive(false);
-        }
-    }
-
-    public override void OnLeftRoom()
-    {
-        Debug.Log("Left room");
-        RestoreCursorState();
-    }
-
     #endregion
 
     #region Room Management
 
-    private bool IsMatchmakingReady()
-    {
-        return PhotonNetwork.IsConnectedAndReady && PhotonNetwork.InLobby;
-    }
-
     private IEnumerator WaitAndCreateRoom(string roomName)
     {
         Debug.Log("[UI] Waiting for matchmaking to be ready (CreateRoom)...");
-        yield return new WaitUntil(() => IsMatchmakingReady());
+        yield return new WaitUntil(() => PhotonManager.Instance.IsMatchmakingReady());
         Debug.Log("[UI] Ready. Create/Join room: " + roomName);
         PhotonManager.Instance.JoinOrCreateRoom(roomName);
         createRoomRoutine = null;
@@ -388,7 +435,7 @@ public class UIManager : MonoBehaviourPunCallbacks
     private IEnumerator WaitAndJoinRoomByName(string roomName)
     {
         Debug.Log("[UI] Waiting for matchmaking to be ready (JoinByName)...");
-        yield return new WaitUntil(() => IsMatchmakingReady());
+        yield return new WaitUntil(() => PhotonManager.Instance.IsMatchmakingReady());
         Debug.Log("[UI] Ready. Join room by name: " + roomName);
         PhotonManager.Instance.JoinRoomByName(roomName);
         joinRoomByNameRoutine = null;
@@ -397,7 +444,7 @@ public class UIManager : MonoBehaviourPunCallbacks
     private IEnumerator WaitAndJoinOrCreate(string roomName)
     {
         Debug.Log("[UI] Waiting for matchmaking to be ready (JoinOrCreate)...");
-        yield return new WaitUntil(() => IsMatchmakingReady());
+        yield return new WaitUntil(() => PhotonManager.Instance.IsMatchmakingReady());
         Debug.Log("[UI] Ready. JoinOrCreate: " + roomName);
         PhotonManager.Instance.JoinOrCreateRoom(roomName);
         joinOrCreateRoutine = null;
@@ -409,7 +456,7 @@ public class UIManager : MonoBehaviourPunCallbacks
         if (string.IsNullOrEmpty(roomName))
             roomName = $"{nickname}'s Room";
 
-        if (IsMatchmakingReady())
+        if (PhotonManager.Instance.IsMatchmakingReady())
         {
             PhotonManager.Instance.JoinOrCreateRoom(roomName);
         }
@@ -425,7 +472,7 @@ public class UIManager : MonoBehaviourPunCallbacks
         string roomName = roomNameInput != null ? roomNameInput.text : string.Empty;
         if (string.IsNullOrEmpty(roomName)) return;
 
-        if (IsMatchmakingReady())
+        if (PhotonManager.Instance.IsMatchmakingReady())
         {
             PhotonManager.Instance.JoinRoomByName(roomName);
         }
@@ -440,7 +487,7 @@ public class UIManager : MonoBehaviourPunCallbacks
     {
         string roomName = roomNameInput != null ? roomNameInput.text : string.Empty;
 
-        if (IsMatchmakingReady())
+        if (PhotonManager.Instance.IsMatchmakingReady())
         {
             PhotonManager.Instance.JoinOrCreateRoom(roomName);
         }
@@ -455,11 +502,9 @@ public class UIManager : MonoBehaviourPunCallbacks
     {
         Debug.Log("Refreshing room list...");
     }
-
     #endregion
 
     #region Room List Management
-
     public void UpdateRoomList(List<RoomInfo> roomList)
     {
         if (!IsMenuScene()) return;
@@ -532,6 +577,5 @@ public class UIManager : MonoBehaviourPunCallbacks
             playerCountText.text = $"Players Online: {totalPlayers}";
         }
     }
-
     #endregion
 }

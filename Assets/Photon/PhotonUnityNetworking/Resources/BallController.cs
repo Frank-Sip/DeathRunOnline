@@ -35,7 +35,7 @@ public class BallController : MonoBehaviourPun
 
     private void MoveBall()
     {
-        transform.position += velocity * Time.deltaTime;
+        transform.Translate(velocity * Time.deltaTime, Space.World);
     }
 
     [PunRPC]
@@ -112,16 +112,14 @@ public class BallController : MonoBehaviourPun
         float paddleHeight = paddle.GetComponent<Collider2D>().bounds.size.y;
         float relativeIntersectY = transform.position.y - paddle.transform.position.y;
         float normalizedIntersect = relativeIntersectY / (paddleHeight / 2f);
-
         float bounceAngle = normalizedIntersect * 60f;
 
         currentSpeed = Mathf.Min(currentSpeed + speedIncrease, maxSpeed);
 
         float direction = Mathf.Sign(velocity.x);
         velocity = Quaternion.Euler(0, 0, bounceAngle) * Vector3.right * direction * currentSpeed;
-
         Vector3 pushDirection = (transform.position - paddle.transform.position).normalized;
-        transform.position += pushDirection * 0.1f;
+        transform.Translate(pushDirection * 0.1f, Space.World);
     }
 
 

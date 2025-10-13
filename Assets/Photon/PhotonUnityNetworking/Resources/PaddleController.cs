@@ -56,18 +56,22 @@ public class PaddleController : MonoBehaviourPun
         float verticalInput = 0f;
 
         if (Input.GetKey(upKey))
+        {
             verticalInput = 1f;
+        }
         else if (Input.GetKey(downKey))
+        {
             verticalInput = -1f;
+        }
 
         if (verticalInput != 0f)
         {
             Vector3 movement = Vector3.up * verticalInput * moveSpeed * Time.deltaTime;
             Vector3 newPosition = transform.position + movement;
+            float clampedY = Mathf.Clamp(newPosition.y, minY, maxY);
+            float actualMovement = clampedY - transform.position.y;
 
-            newPosition.y = Mathf.Clamp(newPosition.y, minY, maxY);
-
-            transform.position = newPosition;
+            transform.Translate(0, actualMovement, 0, Space.World);
         }
     }
 

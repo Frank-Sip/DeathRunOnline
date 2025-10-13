@@ -11,23 +11,44 @@ public class PaddleController : MonoBehaviourPun
     [Header("Input Settings")]
     [SerializeField] private KeyCode upKey = KeyCode.W;
     [SerializeField] private KeyCode downKey = KeyCode.S;
+    [SerializeField] private KeyCode readyKey = KeyCode.Space;
 
     private int teamNumber;
     private bool isLocalPlayer;
+    public bool isReady = false;
 
     private void Start()
     {
         isLocalPlayer = photonView.IsMine;
-
-        // Desactivar collisión entre paletas
-        gameObject.layer = LayerMask.NameToLayer("Paddle");
     }
 
     private void Update()
     {
         if (!isLocalPlayer) return;
 
+        HandleReadyInput();
         HandleMovement();
+    }
+
+    private void HandleReadyInput()
+    {
+        if (!isReady && Input.GetKeyDown(readyKey))
+        {
+            photonView.RPC("RPC_SetReady", RpcTarget.AllBuffered);
+        }
+    }
+
+    [PunRPC]
+    private void RPC_SetReady()
+    {
+        isReady = true;
+
+        if (GameManager2.Instance != null)
+        {
+            GameManager2.Instance.OnPlayerReadyChanged();
+        }
+
+        Debug.Log($"Player {photonView.Owner.ActorNumber} is ready!");
     }
 
     private void HandleMovement()
@@ -44,7 +65,6 @@ public class PaddleController : MonoBehaviourPun
             Vector3 movement = Vector3.up * verticalInput * moveSpeed * Time.deltaTime;
             Vector3 newPosition = transform.position + movement;
 
-            // Limitar movimiento
             newPosition.y = Mathf.Clamp(newPosition.y, minY, maxY);
 
             transform.position = newPosition;
@@ -59,14 +79,5 @@ public class PaddleController : MonoBehaviourPun
     public int GetTeam()
     {
         return teamNumber;
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-		// Las paletas no colisionan entre ellas.
-        if (collision.gameObject.CompareTag("Paddle"))
-        {
-            Physics2D.IgnoreCollision(GetComponent<Collider2D>(), collision.collider);
-        }
     }
 }

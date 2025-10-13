@@ -17,8 +17,8 @@ public class GameManager2 : MonoBehaviourPunCallbacks
 
     [Header("Spawn Settings")]
     [SerializeField] private GameObject paddlePrefab;
-    [SerializeField] private Transform[] team1SpawnPoints; // Izquierda
-    [SerializeField] private Transform[] team2SpawnPoints; // Derecha
+    [SerializeField] private Transform[] team1SpawnPoints;
+    [SerializeField] private Transform[] team2SpawnPoints;
 
     [Header("Ball Settings")]
     [SerializeField] private GameObject ballPrefab;
@@ -28,14 +28,12 @@ public class GameManager2 : MonoBehaviourPunCallbacks
     [SerializeField] private TMP_Text team1ScoreText;
     [SerializeField] private TMP_Text team2ScoreText;
     [SerializeField] private TMP_Text readyCountText;
-    [SerializeField] private GameObject readyButton;
     [SerializeField] private GameObject waitingPanel;
     [SerializeField] private TMP_Text waitingText;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TMP_Text gameOverText;
 
     private Dictionary<int, GameObject> playerPaddles = new Dictionary<int, GameObject>();
-    private GameObject ball;
     private int team1Score = 0;
     private int team2Score = 0;
     private bool gameStarted = false;
@@ -85,6 +83,7 @@ public class GameManager2 : MonoBehaviourPunCallbacks
             { TEAM2_SCORE_KEY, 0 },
             { READY_PLAYERS_KEY, "" }
         };
+        
         PhotonNetwork.CurrentRoom.SetCustomProperties(props);
     }
 
@@ -96,11 +95,7 @@ public class GameManager2 : MonoBehaviourPunCallbacks
 
         Transform spawnPoint = GetSpawnPoint(team, teamIndex);
 
-        GameObject paddle = PhotonNetwork.Instantiate(
-            paddlePrefab.name,
-            spawnPoint.position,
-            spawnPoint.rotation
-        );
+        GameObject paddle = PhotonNetwork.Instantiate(paddlePrefab.name, spawnPoint.position, spawnPoint.rotation);
 
         var paddleController = paddle.GetComponent<PaddleController>();
         if (paddleController != null)
@@ -111,13 +106,11 @@ public class GameManager2 : MonoBehaviourPunCallbacks
 
     private int GetPlayerTeam(int actorNumber)
     {
-        // Asignación cíclica: 1->Team1, 2->Team2, 3->Team1, 4->Team2
         return ((actorNumber - 1) % 2) + 1;
     }
 
     private int GetTeamPlayerIndex(int actorNumber, int team)
     {
-        // Índice dentro del equipo (0 o 1)
         return (actorNumber - 1) / 2;
     }
 
@@ -131,47 +124,77 @@ public class GameManager2 : MonoBehaviourPunCallbacks
         return spawnPoints[teamIndex];
     }
 
-    public void OnReadyButtonPressed()
+    public void NotifyPlayerReady(int actorNumber)
     {
-        photonView.RPC("RPC_PlayerReady", RpcTarget.AllBuffered, PhotonNetwork.LocalPlayer.ActorNumber);
-        readyButton.SetActive(false);
+        photonView.RPC("RPC_PlayerReady", RpcTarget.AllBuffered, actorNumber);
     }
 
     [PunRPC]
     private void RPC_PlayerReady(int actorNumber)
     {
-        readyPlayers.Add(actorNumber);
+        PaddleController[] allPaddles = FindObjectsOfType<PaddleController>();
+
+        foreach (var paddle in allPaddles)
+        {
+            if (paddle.photonView.Owner.ActorNumber == actorNumber)
+            {
+                paddle.isReady = true;
+                break;
+            }
+        }
+
         UpdateReadyUI();
-        CheckStartGame();
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            CheckStartGame();
+        }
+    }
+
+    public void OnPlayerReadyChanged()
+    {
+        UpdateReadyUI();
+        
+        if (PhotonNetwork.IsMasterClient)
+        {
+            CheckStartGame();
+        }
     }
 
     private void UpdateReadyUI()
     {
         if (readyCountText != null)
         {
-            readyCountText.text = $"Ready: {readyPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount}";
+            int readyCount = GetReadyPlayerCount();
+            readyCountText.text = $"Ready: {readyCount}/{PhotonNetwork.CurrentRoom.PlayerCount}";
         }
+    }
+
+    private int GetReadyPlayerCount()
+    {
+        int count = 0;
+        
+        PaddleController[] allPaddles = FindObjectsOfType<PaddleController>();
+        
+        foreach (var paddle in allPaddles)
+        {
+            if (paddle.isReady)
+            {
+                count++;
+            }
+        }
+        
+        return count;
     }
 
     private void CheckStartGame()
     {
         if (!PhotonNetwork.IsMasterClient) return;
+        if (gameStarted) return;
 
-        // Verificar que hay al menos un jugador en cada equipo
-        bool team1HasPlayer = false;
-        bool team2HasPlayer = false;
+        int readyCount = GetReadyPlayerCount();
 
-        foreach (var player in PhotonNetwork.PlayerList)
-        {
-            int team = GetPlayerTeam(player.ActorNumber);
-            if (team == 1) team1HasPlayer = true;
-            if (team == 2) team2HasPlayer = true;
-        }
-
-        // Verificar que todos los jugadores están listos
-        bool allReady = readyPlayers.Count == PhotonNetwork.CurrentRoom.PlayerCount;
-
-        if (allReady && team1HasPlayer && team2HasPlayer && !gameStarted)
+        if (readyCount >= 2)
         {
             photonView.RPC("RPC_StartGame", RpcTarget.AllBuffered);
         }
@@ -185,7 +208,14 @@ public class GameManager2 : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.IsMasterClient)
         {
-            SpawnBall();
+            if (PhotonNetwork.CurrentRoom != null)
+            {
+                PhotonNetwork.CurrentRoom.IsOpen = false;
+                PhotonNetwork.CurrentRoom.IsVisible = false;
+                Debug.Log("[GameManager2] Room closed - no more players can join");
+            }
+
+            photonView.RPC("RPC_InstantiateBall", RpcTarget.AllBuffered);
 
             var props = PhotonNetwork.CurrentRoom.CustomProperties;
             props[GAME_STARTED_KEY] = true;
@@ -193,10 +223,21 @@ public class GameManager2 : MonoBehaviourPunCallbacks
         }
     }
 
-    private void SpawnBall()
+    [PunRPC]
+    private void RPC_InstantiateBall()
     {
-        Vector3 spawnPos = ballSpawnPoint != null ? ballSpawnPoint.position : Vector3.zero;
-        ball = PhotonNetwork.Instantiate(ballPrefab.name, spawnPos, Quaternion.identity);
+        if (PhotonNetwork.IsMasterClient)
+        {
+            if (ballPrefab == null)
+            {
+                Debug.LogError("[GameManager2] Ball prefab is null!");
+                return;
+            }
+
+            Vector3 spawnPos = ballSpawnPoint != null ? ballSpawnPoint.position : Vector3.zero;
+            GameObject ball = PhotonNetwork.Instantiate(ballPrefab.name, spawnPos, Quaternion.identity);
+            Debug.Log($"[GameManager2] Ball instantiated at position: {spawnPos}, ball: {ball.name}");
+        }
     }
 
     private void ShowWaitingPanel()
@@ -218,28 +259,43 @@ public class GameManager2 : MonoBehaviourPunCallbacks
     {
         if (waitingText != null)
         {
-            waitingText.text = "Waiting for all players to be ready...";
+            waitingText.text = "Press SPACE when ready (at least 2 players needed)";
         }
     }
 
-    public void AddScore(int team)
+    public void OnGoalScored(int team)
     {
         if (!PhotonNetwork.IsMasterClient) return;
 
-        if (team == 1)
-            team1Score++;
-        else if (team == 2)
-            team2Score++;
+        if (team == 1) team1Score++;
+        else if (team == 2) team2Score++;
 
         photonView.RPC("RPC_UpdateScore", RpcTarget.AllBuffered, team1Score, team2Score);
+
+        photonView.RPC("RPC_RepositionBall", RpcTarget.AllBuffered);
 
         if (team1Score >= pointsToWin || team2Score >= pointsToWin)
         {
             photonView.RPC("RPC_EndGame", RpcTarget.AllBuffered, team);
         }
-        else
+    }
+
+    [PunRPC]
+    private void RPC_RepositionBall()
+    {
+        BallController ball = FindObjectOfType<BallController>();
+        
+        if (ball != null)
         {
-            StartCoroutine(RespawnBallAfterDelay(2f));
+            Vector3 spawnPos = ballSpawnPoint != null ? ballSpawnPoint.position : Vector3.zero;
+            ball.transform.position = spawnPos;
+            
+            Debug.Log($"[GameManager2] Ball repositioned to: {spawnPos}");
+            
+            if (ball.photonView.IsMine)
+            {
+                ball.photonView.RPC("RPC_LaunchBall", RpcTarget.AllBuffered);
+            }
         }
     }
 
@@ -260,17 +316,6 @@ public class GameManager2 : MonoBehaviourPunCallbacks
             team2ScoreText.text = team2Score.ToString();
     }
 
-    private IEnumerator RespawnBallAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-
-        if (PhotonNetwork.IsMasterClient && ball != null)
-        {
-            PhotonNetwork.Destroy(ball);
-            SpawnBall();
-        }
-    }
-
     [PunRPC]
     private void RPC_EndGame(int winningTeam)
     {
@@ -285,7 +330,7 @@ public class GameManager2 : MonoBehaviourPunCallbacks
             }
         }
 
-        StartCoroutine(ReturnToLobbyAfterDelay(5f));
+        StartCoroutine(ReturnToLobbyAfterDelay(0f));
     }
 
     private IEnumerator ReturnToLobbyAfterDelay(float delay)
@@ -302,14 +347,12 @@ public class GameManager2 : MonoBehaviourPunCallbacks
     {
         if (gameStarted)
         {
-            // No permitir nuevos jugadores durante la partida
             Debug.Log("Game already started, player cannot join");
         }
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        readyPlayers.Remove(otherPlayer.ActorNumber);
         UpdateReadyUI();
     }
 

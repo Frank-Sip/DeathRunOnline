@@ -1,6 +1,5 @@
 using UnityEngine;
 using Photon.Pun;
-using System.Collections;
 
 public class BallController : MonoBehaviourPun
 {
@@ -22,14 +21,8 @@ public class BallController : MonoBehaviourPun
     {
         if (photonView.IsMine)
         {
-            StartCoroutine(InitialDelay());
+            photonView.RPC("RPC_LaunchBall", RpcTarget.AllBuffered);
         }
-    }
-
-    private IEnumerator InitialDelay()
-    {
-        yield return new WaitForSeconds(1f);
-        ResetBall();
     }
 
     private void Update()
@@ -45,23 +38,24 @@ public class BallController : MonoBehaviourPun
         transform.position += velocity * Time.deltaTime;
     }
 
-    private void ResetBall()
+    [PunRPC]
+    public void RPC_LaunchBall()
     {
-        transform.position = Vector3.zero;
-        currentSpeed = initialSpeed;
+        if (photonView.IsMine)
+        {
+            currentSpeed = initialSpeed;
 
-        // Dirección aleatoria inicial
-        float randomAngle = Random.Range(-45f, 45f);
-        float direction = Random.value > 0.5f ? 1f : -1f;
+            float randomAngle = Random.Range(-45f, 45f);
+            float direction = Random.value > 0.5f ? 1f : -1f;
 
-        velocity = Quaternion.Euler(0, 0, randomAngle) * Vector3.right * direction * currentSpeed;
+            velocity = Quaternion.Euler(0, 0, randomAngle) * Vector3.right * direction * currentSpeed;
+        }
     }
 
     private void CheckBoundaries()
     {
         Vector3 pos = transform.position;
 
-        // Rebote superior e inferior
         if (pos.y >= topBoundary && velocity.y > 0)
         {
             velocity.y = -velocity.y;
@@ -75,16 +69,19 @@ public class BallController : MonoBehaviourPun
             transform.position = pos;
         }
 
-        // Gol en el lado izquierdo (punto para Team 2)
         if (pos.x <= leftBoundary)
         {
-            photonView.RPC("RPC_ScorePoint", RpcTarget.MasterClient, 2);
+            OnGoalScored(2);
         }
-        // Gol en el lado derecho (punto para Team 1)
         else if (pos.x >= rightBoundary)
         {
-            photonView.RPC("RPC_ScorePoint", RpcTarget.MasterClient, 1);
+            OnGoalScored(1);
         }
+    }
+
+    private void OnGoalScored(int team)
+    {
+        photonView.RPC("RPC_ScorePoint", RpcTarget.AllBuffered, team);
     }
 
     [PunRPC]
@@ -92,46 +89,42 @@ public class BallController : MonoBehaviourPun
     {
         if (PhotonNetwork.IsMasterClient && GameManager2.Instance != null)
         {
-            GameManager2.Instance.AddScore(team);
+            GameManager2.Instance.OnGoalScored(team);
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
         if (!photonView.IsMine) return;
 
-        if (collision.CompareTag("Paddle"))
+        PaddleController paddle = collision.gameObject.GetComponent<PaddleController>();
+        
+        if (paddle != null)
         {
-            HandlePaddleCollision(collision);
+            HandlePaddleCollision(paddle);
         }
     }
 
-    private void HandlePaddleCollision(Collider2D paddle)
+    private void HandlePaddleCollision(PaddleController paddle)
     {
-        // Cambiar dirección horizontal
         velocity.x = -velocity.x;
 
-        // Calcular ángulo según posición de impacto
-        float paddleHeight = paddle.bounds.size.y;
+        float paddleHeight = paddle.GetComponent<Collider2D>().bounds.size.y;
         float relativeIntersectY = transform.position.y - paddle.transform.position.y;
         float normalizedIntersect = relativeIntersectY / (paddleHeight / 2f);
 
-        // Ajustar ángulo vertical basado en dónde golpea
-        float bounceAngle = normalizedIntersect * 60f; // Máximo 60 grados
+        float bounceAngle = normalizedIntersect * 60f;
 
-        // Incrementar velocidad
         currentSpeed = Mathf.Min(currentSpeed + speedIncrease, maxSpeed);
 
-        // Aplicar nueva dirección
         float direction = Mathf.Sign(velocity.x);
         velocity = Quaternion.Euler(0, 0, bounceAngle) * Vector3.right * direction * currentSpeed;
 
-        // Alejar la bola de la paleta para evitar colisiones múltiples
         Vector3 pushDirection = (transform.position - paddle.transform.position).normalized;
         transform.position += pushDirection * 0.1f;
     }
 
-    // Sincronizar posición para clientes
+
     private void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.IsWriting)

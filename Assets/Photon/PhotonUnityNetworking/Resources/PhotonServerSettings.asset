@@ -65,6 +65,11 @@ MonoBehaviour:
   - RPC_PlayerReady
   - RPC_ScorePoint
   - RPC_UpdateScore
+  - RPC_SetReady
+  - RPC_SpawnBall
+  - RPC_InstantiateBall
+  - RPC_LaunchBall
+  - RPC_RepositionBall
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

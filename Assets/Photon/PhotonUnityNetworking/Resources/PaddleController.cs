@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Photon.Pun;
 
 public class PaddleController : MonoBehaviourPun
@@ -13,13 +13,64 @@ public class PaddleController : MonoBehaviourPun
     [SerializeField] private KeyCode downKey = KeyCode.S;
     [SerializeField] private KeyCode readyKey = KeyCode.Space;
 
+    // NUEVO: Para colores 3D
+    [Header("Visual Settings")]
+    [SerializeField] private Renderer paddleRenderer; // Arrastra el MeshRenderer aquí en el inspector
+
     private int teamNumber;
     private bool isLocalPlayer;
     public bool isReady = false;
+    private Material paddleMaterial;
 
     private void Start()
     {
         isLocalPlayer = photonView.IsMine;
+
+        // NUEVO: Configurar material
+        SetupPaddleMaterial();
+
+        // Aplicar color del jugador
+        if (ColorManager.Instance != null)
+        {
+            Color playerColor = ColorManager.Instance.GetPlayerColor(photonView.Owner.ActorNumber);
+            ApplyColor(playerColor);
+        }
+    }
+
+    private void SetupPaddleMaterial()
+    {
+        // Si no asignaste el renderer en el inspector, búscalo
+        if (paddleRenderer == null)
+        {
+            paddleRenderer = GetComponent<Renderer>();
+            if (paddleRenderer == null)
+            {
+                paddleRenderer = GetComponentInChildren<Renderer>();
+            }
+        }
+
+        // Crear una instancia del material para este paddle
+        if (paddleRenderer != null)
+        {
+            paddleMaterial = new Material(paddleRenderer.material);
+            paddleRenderer.material = paddleMaterial;
+        }
+        else
+        {
+            Debug.LogError($"[PaddleController] No se encontró Renderer en {gameObject.name}");
+        }
+    }
+
+    private void ApplyColor(Color color)
+    {
+        if (paddleMaterial != null)
+        {
+            // Para Standard Shader
+            paddleMaterial.color = color;
+
+            // Si usas URP/HDRP, también puedes usar:
+            // paddleMaterial.SetColor("_BaseColor", color);
+        }
     }
 
     private void Update()
@@ -83,5 +134,14 @@ public class PaddleController : MonoBehaviourPun
     public int GetTeam()
     {
         return teamNumber;
+    }
+
+    private void OnDestroy()
+    {
+        // Limpiar el material instanciado
+        if (paddleMaterial != null)
+        {
+            Destroy(paddleMaterial);
+        }
     }
 }

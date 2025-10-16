@@ -34,16 +34,15 @@ public class UIManager : MonoBehaviourPunCallbacks
     [SerializeField] private TMP_Text roomCountText;
     [SerializeField] private TMP_Text playerCountText;
 
-    [Header("Skin Configuration")]
-    [SerializeField] private Button[] skinButtons;
-    [SerializeField] private Image skinPreview;
-    [SerializeField] private PlayerSkinConfig skinConfig;
+    [Header("Color Selection")]
+    [SerializeField] private Button[] colorButtons;
+    [SerializeField] private Image colorPreview;
 
     private const string nickNameKey = "playerNickname";
-    private const string skinKey = "playerSkin";
+    private const string colorKey = "playerColor";
 
     private string nickname;
-    private int selectedSkinIndex = 0;
+    private int selectedColorIndex = 0;
     private List<GameObject> roomListItems = new List<GameObject>();
 
     private Coroutine createRoomRoutine;
@@ -93,7 +92,7 @@ public class UIManager : MonoBehaviourPunCallbacks
 
     private IEnumerator HandleReturnFromGame()
     {
-        yield return null; 
+        yield return null;
 
         if (PhotonNetwork.InLobby)
         {
@@ -126,13 +125,19 @@ public class UIManager : MonoBehaviourPunCallbacks
     {
         InitializeUI();
         SetupButtons();
-        SetupSkinButtons();
-        SelectSkin(0);
+        SetupColorButtons();
+        SelectColor(0);
 
         if (PlayerPrefs.HasKey(nickNameKey))
         {
             nameInput.text = PlayerPrefs.GetString(nickNameKey);
             nickname = nameInput.text;
+        }
+
+        if (PlayerPrefs.HasKey(colorKey))
+        {
+            selectedColorIndex = PlayerPrefs.GetInt(colorKey);
+            SelectColor(selectedColorIndex);
         }
 
         VerifyName(nameInput.text);
@@ -215,51 +220,113 @@ public class UIManager : MonoBehaviourPunCallbacks
             nickname = name;
     }
 
-    private void SetupSkinButtons()
+    private void SetupColorButtons()
     {
-        if (skinConfig == null) return;
-
-        int skinCount = skinConfig.GetSkinCount();
-
-        for (int i = 0; i < skinButtons.Length && i < skinCount; i++)
+        if (ColorManager.Instance == null)
         {
-            int index = i;
-            skinButtons[i].onClick.AddListener(() => SelectSkin(index));
-
-            var skinData = skinConfig.GetSkinData(i);
-            if (skinData.skinIcon != null)
-            {
-                Image buttonImage = skinButtons[i].GetComponent<Image>();
-                if (buttonImage != null)
-                    buttonImage.sprite = skinData.skinIcon;
-            }
-
-            skinButtons[i].gameObject.SetActive(true);
+            Debug.LogWarning("ColorManager.Instance is null! Make sure ColorManager exists in the game scene.");
+            // Crear colores por defecto si no existe el ColorManager
+            SetupDefaultColors();
+            return;
         }
 
-        for (int i = skinCount; i < skinButtons.Length; i++)
+        Color[] colors = ColorManager.Instance.availableColors;
+
+        for (int i = 0; i < colorButtons.Length && i < colors.Length; i++)
         {
-            skinButtons[i].gameObject.SetActive(false);
+            int index = i;
+
+            // Limpiar listeners previos
+            colorButtons[i].onClick.RemoveAllListeners();
+            colorButtons[i].onClick.AddListener(() => SelectColor(index));
+
+            // Colorear el botón
+            Image buttonImage = colorButtons[i].GetComponent<Image>();
+            if (buttonImage != null)
+            {
+                buttonImage.color = colors[i];
+            }
+
+            colorButtons[i].gameObject.SetActive(true);
+        }
+
+        // Ocultar botones extra
+        for (int i = colors.Length; i < colorButtons.Length; i++)
+        {
+            colorButtons[i].gameObject.SetActive(false);
         }
     }
 
-    private void SelectSkin(int skinIndex)
+    private void SetupDefaultColors()
     {
-        if (skinConfig == null) return;
-
-        selectedSkinIndex = skinIndex;
-        var skinData = skinConfig.GetSkinData(skinIndex);
-
-        if (skinData.skinIcon != null && skinPreview != null)
+        // Colores por defecto si no hay ColorManager
+        Color[] defaultColors = new Color[]
         {
-            skinPreview.sprite = skinData.skinIcon;
+            Color.red,
+            Color.blue,
+            Color.green,
+            Color.yellow
+        };
+
+        for (int i = 0; i < colorButtons.Length && i < defaultColors.Length; i++)
+        {
+            int index = i;
+
+            colorButtons[i].onClick.RemoveAllListeners();
+            colorButtons[i].onClick.AddListener(() => SelectColor(index));
+
+            Image buttonImage = colorButtons[i].GetComponent<Image>();
+            if (buttonImage != null)
+            {
+                buttonImage.color = defaultColors[i];
+            }
+
+            colorButtons[i].gameObject.SetActive(true);
         }
 
-        for (int i = 0; i < skinButtons.Length; i++)
+        for (int i = defaultColors.Length; i < colorButtons.Length; i++)
         {
-            if (skinButtons[i] != null)
-                skinButtons[i].interactable = (i != skinIndex);
+            colorButtons[i].gameObject.SetActive(false);
         }
+    }
+
+    private void SelectColor(int colorIndex)
+    {
+        selectedColorIndex = colorIndex;
+
+        Color selectedColor = Color.white;
+
+        if (ColorManager.Instance != null)
+        {
+            if (colorIndex >= 0 && colorIndex < ColorManager.Instance.availableColors.Length)
+            {
+                selectedColor = ColorManager.Instance.availableColors[colorIndex];
+            }
+        }
+        else
+        {
+            // Usar colores por defecto
+            Color[] defaultColors = new Color[] { Color.red, Color.blue, Color.green, Color.yellow };
+            if (colorIndex >= 0 && colorIndex < defaultColors.Length)
+            {
+                selectedColor = defaultColors[colorIndex];
+            }
+        }
+
+        // Actualizar preview
+        if (colorPreview != null)
+        {
+            colorPreview.color = selectedColor;
+        }
+
+        // Actualizar botones (hacer que el seleccionado no sea interactuable)
+        for (int i = 0; i < colorButtons.Length; i++)
+        {
+            if (colorButtons[i] != null)
+                colorButtons[i].interactable = (i != colorIndex);
+        }
+
+        Debug.Log($"Color selected: {selectedColor}");
     }
 
     private void OnInputSubmit(string _)
@@ -293,8 +360,10 @@ public class UIManager : MonoBehaviourPunCallbacks
     private void SavePlayerPreferences()
     {
         PlayerPrefs.SetString(nickNameKey, nickname);
-        PlayerPrefs.SetInt(skinKey, selectedSkinIndex);
+        PlayerPrefs.SetInt(colorKey, selectedColorIndex);
         PlayerPrefs.Save();
+
+        Debug.Log($"Saved preferences - Nickname: {nickname}, Color Index: {selectedColorIndex}");
     }
 
     private void ConnectToPhoton()
@@ -303,7 +372,17 @@ public class UIManager : MonoBehaviourPunCallbacks
         if (continueButton != null) continueButton.interactable = false;
         if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
 
-        PhotonManager.Instance.ConnectToPhoton(nickname, selectedSkinIndex);
+        // Guardar color seleccionado en las propiedades del jugador
+        Color selectedColor = Color.white;
+
+        if (ColorManager.Instance != null && selectedColorIndex < ColorManager.Instance.availableColors.Length)
+        {
+            selectedColor = ColorManager.Instance.availableColors[selectedColorIndex];
+            ColorManager.Instance.SetPlayerColor(selectedColor);
+        }
+
+        Debug.Log($"Connecting to Photon with color: {selectedColor}");
+        PhotonManager.Instance.ConnectToPhoton(nickname, selectedColorIndex);
     }
 
     public void ShowLobbyPanel()

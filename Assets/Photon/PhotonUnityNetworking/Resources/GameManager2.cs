@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
@@ -95,6 +95,13 @@ public class GameManager2 : MonoBehaviourPunCallbacks
 
         Transform spawnPoint = GetSpawnPoint(team, teamIndex);
 
+        // VERIFICAR Y ASIGNAR COLOR ANTES DE SPAWN
+        if (ColorManager.Instance != null)
+        {
+            Color availableColor = ColorManager.Instance.GetAvailableColor();
+            ColorManager.Instance.SetPlayerColor(availableColor);
+        }
+
         GameObject paddle = PhotonNetwork.Instantiate(paddlePrefab.name, spawnPoint.position, spawnPoint.rotation);
 
         var paddleController = paddle.GetComponent<PaddleController>();
@@ -168,6 +175,8 @@ public class GameManager2 : MonoBehaviourPunCallbacks
             int readyCount = GetReadyPlayerCount();
             readyCountText.text = $"Ready: {readyCount}/{PhotonNetwork.CurrentRoom.PlayerCount}";
         }
+
+        UpdateWaitingText();
     }
 
     private int GetReadyPlayerCount()
@@ -259,7 +268,17 @@ public class GameManager2 : MonoBehaviourPunCallbacks
     {
         if (waitingText != null)
         {
-            waitingText.text = "Press SPACE when ready (at least 2 players needed)";
+            int readyCount = GetReadyPlayerCount();
+            int totalPlayers = PhotonNetwork.CurrentRoom.PlayerCount;
+
+            if (readyCount >= 2)
+            {
+                waitingText.text = "Starting game...";
+            }
+            else
+            {
+                waitingText.text = $"<size=48>Press SPACE when ready</size>\n\n({readyCount}/{totalPlayers} players ready)\n<size=24>At least 2 players needed</size>";
+            }
         }
     }
 
@@ -326,11 +345,21 @@ public class GameManager2 : MonoBehaviourPunCallbacks
             gameOverPanel.SetActive(true);
             if (gameOverText != null)
             {
-                gameOverText.text = $"Team {winningTeam} Wins!";
+                // Determinar si el jugador local ganó o perdió
+                int localPlayerTeam = GetPlayerTeam(PhotonNetwork.LocalPlayer.ActorNumber);
+
+                if (localPlayerTeam == winningTeam)
+                {
+                    gameOverText.text = $"<color=green>¡VICTORIA!</color>\n\nTeam {winningTeam} Wins!\n\n<size=24>Returning to lobby...</size>";
+                }
+                else
+                {
+                    gameOverText.text = $"<color=red>DERROTA</color>\n\nTeam {winningTeam} Wins\n\n<size=24>Returning to lobby...</size>";
+                }
             }
         }
 
-        StartCoroutine(ReturnToLobbyAfterDelay(0f));
+        StartCoroutine(ReturnToLobbyAfterDelay(5f)); // Cambiado a 5 segundos
     }
 
     private IEnumerator ReturnToLobbyAfterDelay(float delay)

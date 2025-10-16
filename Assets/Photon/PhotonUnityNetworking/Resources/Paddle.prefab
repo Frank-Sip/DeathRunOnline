@@ -105,6 +105,7 @@ MonoBehaviour:
   upKey: 119
   downKey: 115
   readyKey: 32
+  paddleRenderer: {fileID: 1832077896883555721}
   isReady: 0
 --- !u!114 &3114746851637500467
 MonoBehaviour:

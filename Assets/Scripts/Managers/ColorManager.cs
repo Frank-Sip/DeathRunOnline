@@ -3,7 +3,7 @@ using Photon.Pun;
 using ExitGames.Client.Photon;
 using System.Collections.Generic;
 using System.Linq;
-using System.Globalization; // ← AGREGAR ESTO
+using System.Globalization; 
 
 public class ColorManager : MonoBehaviour
 {
@@ -18,8 +18,8 @@ public class ColorManager : MonoBehaviour
         Color.yellow,
         Color.cyan,
         Color.magenta,
-        new Color(1f, 0.5f, 0f), // Orange
-        new Color(0.5f, 0f, 1f)  // Purple
+        new Color(1f, 0.5f, 0f), 
+        new Color(0.5f, 0f, 1f)  
     };
 
     private const string PLAYER_COLOR_KEY = "PaddleColor";
@@ -116,20 +116,16 @@ public class ColorManager : MonoBehaviour
                Mathf.Approximately(a.b, b.b);
     }
 
-    // ← CORREGIDO: Usar InvariantCulture para evitar problemas con comas/puntos
     private string ColorToString(Color color)
     {
         return string.Format(CultureInfo.InvariantCulture, "{0:F3}|{1:F3}|{2:F3}",
             color.r, color.g, color.b);
     }
 
-    // ← CORREGIDO: Parsear con InvariantCulture y usar | como separador
     private Color StringToColor(string colorString)
     {
-        // Intentar con separador |
         string[] parts = colorString.Split('|');
 
-        // Si no tiene |, intentar con coma (retrocompatibilidad)
         if (parts.Length != 3)
         {
             parts = colorString.Split(',');

@@ -95,7 +95,6 @@ public class GameManager2 : MonoBehaviourPunCallbacks
 
         Transform spawnPoint = GetSpawnPoint(team, teamIndex);
 
-        // VERIFICAR Y ASIGNAR COLOR ANTES DE SPAWN
         if (ColorManager.Instance != null)
         {
             Color availableColor = ColorManager.Instance.GetAvailableColor();
@@ -345,7 +344,6 @@ public class GameManager2 : MonoBehaviourPunCallbacks
             gameOverPanel.SetActive(true);
             if (gameOverText != null)
             {
-                // Determinar si el jugador local ganó o perdió
                 int localPlayerTeam = GetPlayerTeam(PhotonNetwork.LocalPlayer.ActorNumber);
 
                 if (localPlayerTeam == winningTeam)
@@ -359,7 +357,7 @@ public class GameManager2 : MonoBehaviourPunCallbacks
             }
         }
 
-        StartCoroutine(ReturnToLobbyAfterDelay(5f)); // Cambiado a 5 segundos
+        StartCoroutine(ReturnToLobbyAfterDelay(5f)); 
     }
 
     private IEnumerator ReturnToLobbyAfterDelay(float delay)

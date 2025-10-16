@@ -13,9 +13,8 @@ public class PaddleController : MonoBehaviourPun
     [SerializeField] private KeyCode downKey = KeyCode.S;
     [SerializeField] private KeyCode readyKey = KeyCode.Space;
 
-    // NUEVO: Para colores 3D
     [Header("Visual Settings")]
-    [SerializeField] private Renderer paddleRenderer; // Arrastra el MeshRenderer aquí en el inspector
+    [SerializeField] private Renderer paddleRenderer;
 
     private int teamNumber;
     private bool isLocalPlayer;
@@ -26,10 +25,8 @@ public class PaddleController : MonoBehaviourPun
     {
         isLocalPlayer = photonView.IsMine;
 
-        // NUEVO: Configurar material
         SetupPaddleMaterial();
 
-        // Aplicar color del jugador
         if (ColorManager.Instance != null)
         {
             Color playerColor = ColorManager.Instance.GetPlayerColor(photonView.Owner.ActorNumber);
@@ -39,7 +36,6 @@ public class PaddleController : MonoBehaviourPun
 
     private void SetupPaddleMaterial()
     {
-        // Si no asignaste el renderer en el inspector, búscalo
         if (paddleRenderer == null)
         {
             paddleRenderer = GetComponent<Renderer>();
@@ -49,7 +45,6 @@ public class PaddleController : MonoBehaviourPun
             }
         }
 
-        // Crear una instancia del material para este paddle
         if (paddleRenderer != null)
         {
             paddleMaterial = new Material(paddleRenderer.material);
@@ -65,11 +60,7 @@ public class PaddleController : MonoBehaviourPun
     {
         if (paddleMaterial != null)
         {
-            // Para Standard Shader
             paddleMaterial.color = color;
-
-            // Si usas URP/HDRP, también puedes usar:
-            // paddleMaterial.SetColor("_BaseColor", color);
         }
     }
 
@@ -138,7 +129,6 @@ public class PaddleController : MonoBehaviourPun
 
     private void OnDestroy()
     {
-        // Limpiar el material instanciado
         if (paddleMaterial != null)
         {
             Destroy(paddleMaterial);

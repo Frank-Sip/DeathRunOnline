@@ -225,7 +225,6 @@ public class UIManager : MonoBehaviourPunCallbacks
         if (ColorManager.Instance == null)
         {
             Debug.LogWarning("ColorManager.Instance is null! Make sure ColorManager exists in the game scene.");
-            // Crear colores por defecto si no existe el ColorManager
             SetupDefaultColors();
             return;
         }
@@ -236,11 +235,9 @@ public class UIManager : MonoBehaviourPunCallbacks
         {
             int index = i;
 
-            // Limpiar listeners previos
             colorButtons[i].onClick.RemoveAllListeners();
             colorButtons[i].onClick.AddListener(() => SelectColor(index));
 
-            // Colorear el botón
             Image buttonImage = colorButtons[i].GetComponent<Image>();
             if (buttonImage != null)
             {
@@ -250,7 +247,6 @@ public class UIManager : MonoBehaviourPunCallbacks
             colorButtons[i].gameObject.SetActive(true);
         }
 
-        // Ocultar botones extra
         for (int i = colors.Length; i < colorButtons.Length; i++)
         {
             colorButtons[i].gameObject.SetActive(false);
@@ -259,7 +255,6 @@ public class UIManager : MonoBehaviourPunCallbacks
 
     private void SetupDefaultColors()
     {
-        // Colores por defecto si no hay ColorManager
         Color[] defaultColors = new Color[]
         {
             Color.red,
@@ -305,7 +300,6 @@ public class UIManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            // Usar colores por defecto
             Color[] defaultColors = new Color[] { Color.red, Color.blue, Color.green, Color.yellow };
             if (colorIndex >= 0 && colorIndex < defaultColors.Length)
             {
@@ -313,13 +307,11 @@ public class UIManager : MonoBehaviourPunCallbacks
             }
         }
 
-        // Actualizar preview
         if (colorPreview != null)
         {
             colorPreview.color = selectedColor;
         }
 
-        // Actualizar botones (hacer que el seleccionado no sea interactuable)
         for (int i = 0; i < colorButtons.Length; i++)
         {
             if (colorButtons[i] != null)
@@ -372,7 +364,6 @@ public class UIManager : MonoBehaviourPunCallbacks
         if (continueButton != null) continueButton.interactable = false;
         if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
 
-        // Guardar color seleccionado en las propiedades del jugador
         Color selectedColor = Color.white;
 
         if (ColorManager.Instance != null && selectedColorIndex < ColorManager.Instance.availableColors.Length)

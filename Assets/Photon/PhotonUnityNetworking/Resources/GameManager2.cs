@@ -14,6 +14,7 @@ public class GameManager2 : MonoBehaviourPunCallbacks
     [Header("Game Settings")]
     [SerializeField] private int pointsToWin = 5;
     [SerializeField] private string menuSceneName = "MainMenu";
+    [SerializeField] private float winDelay;
 
     [Header("Spawn Settings")]
     [SerializeField] private GameObject paddlePrefab;
@@ -357,7 +358,7 @@ public class GameManager2 : MonoBehaviourPunCallbacks
             }
         }
 
-        StartCoroutine(ReturnToLobbyAfterDelay(5f)); 
+        StartCoroutine(ReturnToLobbyAfterDelay(winDelay)); 
     }
 
     private IEnumerator ReturnToLobbyAfterDelay(float delay)

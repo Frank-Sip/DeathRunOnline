@@ -246,9 +246,13 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         }
     }
 
+
     public void Die()
     {
         isAlive = false;
+
+        bool wasRunner = IsPlayerRunner(PhotonView.Owner);
+
         GameTagManager.Instance.SetPlayerTag(PhotonView.Owner, "Dead");
         PhotonView.RPC("RPC_UpdateAliveState", RpcTarget.Others, false);
         OnPlayerDeath?.Invoke(this);
@@ -266,7 +270,22 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         if (PhotonView.IsMine)
         {
             DeathCameraManager.Instance.ActivateAnyCamera();
+
+            if (wasRunner)
+            {
+                GameManager.Instance.photonView.RPC("RPC_DecrementRunnerCount", RpcTarget.All);
+            }
         }
+    }
+
+    private bool IsPlayerRunner(Photon.Realtime.Player player)
+    {
+        if (player.CustomProperties.TryGetValue("playerTag", out object tagValue))
+        {
+            string playerTag = tagValue.ToString();
+            return playerTag.ToLower() == "runner";
+        }
+        return false;
     }
 
     [PunRPC]
@@ -363,9 +382,11 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
                 transform.rotation = rotation;
             }
 
+            float lag = Mathf.Abs((float)(PhotonNetwork.Time - info.SentServerTime));
             if (rb != null)
             {
                 rb.velocity = velocity;
+                position += rb.velocity * lag;
             }
         }
     }

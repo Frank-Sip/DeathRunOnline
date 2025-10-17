@@ -36,6 +36,7 @@ public class GameTagManager : MonoBehaviourPun
         var runnerTag = System.Array.Find(labelConfig.availableTags, tag => tag.tagName.ToLower() == "runner");
 
         int killerIndex = Random.Range(0, players.Length);
+
         for (int i = 0; i < players.Length; i++)
         {
             if (i == killerIndex)
@@ -45,10 +46,11 @@ public class GameTagManager : MonoBehaviourPun
             else
             {
                 SetPlayerTag(players[i], runnerTag.tagName);
+                GameManager.Instance.photonView.RPC("RPC_IncrementRunnerCount", RpcTarget.All);
             }
         }
 
-        Debug.Log($"Tags assigned: 1 Killer, {players.Length - 1} Runners");
+        //Debug.Log($"Tags assigned: 1 Killer, {players.Length - 1} Runners");
     }
 
     public void SetAllPlayersTag(string tagName)

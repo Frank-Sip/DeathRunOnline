@@ -66,6 +66,8 @@ MonoBehaviour:
   - RPC_ClearPlayerTag
   - RPC_AnnounceResult
   - RPC_SendChoiceToMaster
+  - RPC_PlayerDisconnected
+  - RPC_StartNewRound
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -88,7 +88,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
         RoomOptions options = new RoomOptions
         {
-            MaxPlayers = 4,
+            MaxPlayers = 2,
             IsVisible = true,
             IsOpen = true
         };

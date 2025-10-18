@@ -20,11 +20,12 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
 {
     public static RPSGameManager Instance;
 
-    [Header("UI Panels")]
+    [Header("UI Elements")]
     [SerializeField] private GameObject gamePanel;
-    [SerializeField] private GameObject resultPanel;
-    [SerializeField] private GameObject victoryPanel;
-    [SerializeField] private GameObject waitingPanel;
+    [SerializeField] private TMP_Text roundText;
+    [SerializeField] private TMP_Text scoreText;
+    [SerializeField] private TMP_Text resultText;
+    [SerializeField] private TMP_Text selectedChoiceText;
 
     [Header("Choice Buttons")]
     [SerializeField] private Button piedraButton;
@@ -34,34 +35,20 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
     [SerializeField] private Button spockButton;
     [SerializeField] private Button sendButton;
 
-    [Header("Text Elements")]
-    [SerializeField] private TMP_Text roundText;
-    [SerializeField] private TMP_Text scoreText;
-    [SerializeField] private TMP_Text resultText;
-    [SerializeField] private TMP_Text waitingText;
-    [SerializeField] private TMP_Text victoryText;
-    [SerializeField] private TMP_Text selectedChoiceText;
-    [SerializeField] private TMP_Text waitingRoomText;
-
     [Header("Settings")]
     [SerializeField] private float resultDisplayTime = 3f;
     [SerializeField] private float victoryDisplayTime = 4f;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
-    // Game State
     private RPSOption selectedChoice = RPSOption.None;
     private bool hasSelectedChoice = false;
-    private bool waitingForOpponent = false;
     private bool gameStarted = false;
 
-    // Master manages these
     private Dictionary<int, RPSOption> playerChoices = new Dictionary<int, RPSOption>();
     private Dictionary<int, int> playerScores = new Dictionary<int, int>();
     private int currentRound = 1;
     private const int WINNING_SCORE = 2;
-    private const int MAX_ROUNDS = 3;
 
-    // Player order (Master decides)
     private int player1ActorNumber = -1;
     private int player2ActorNumber = -1;
 
@@ -123,15 +110,12 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
 
     private void ShowWaitingForPlayers()
     {
-        if (gamePanel != null) gamePanel.SetActive(false);
-        if (resultPanel != null) resultPanel.SetActive(false);
-        if (victoryPanel != null) victoryPanel.SetActive(false);
-        if (waitingPanel != null)
-        {
-            waitingPanel.SetActive(true);
-            if (waitingRoomText != null)
-                waitingRoomText.text = "Esperando al otro jugador...";
-        }
+        if (resultText != null)
+            resultText.text = "Esperando al otro jugador...";
+
+        EnableChoiceButtons(false);
+        if (sendButton != null)
+            sendButton.interactable = false;
     }
 
     private void InitializeGame()
@@ -165,18 +149,13 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
         currentRound = 1;
         gameStarted = true;
 
-        ShowGamePanel();
-        UpdateUI();
-    }
-
-    private void ShowGamePanel()
-    {
-        if (waitingPanel != null) waitingPanel.SetActive(false);
         if (gamePanel != null) gamePanel.SetActive(true);
-        if (resultPanel != null) resultPanel.SetActive(false);
-        if (victoryPanel != null) victoryPanel.SetActive(false);
 
         ResetRound();
+        UpdateUI();
+
+        if (resultText != null)
+            resultText.text = "¡Selecciona tu jugada!";
     }
 
     #endregion
@@ -235,13 +214,8 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
         if (sendButton != null)
             sendButton.interactable = false;
 
-        waitingForOpponent = true;
-
-        if (waitingText != null)
-        {
-            waitingText.gameObject.SetActive(true);
-            waitingText.text = "Esperando al oponente...";
-        }
+        if (resultText != null)
+            resultText.text = "Esperando al oponente...";
     }
 
     private void EnableChoiceButtons(bool enable)
@@ -256,12 +230,6 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
     #endregion
 
     #region Master Client Logic
-
-    public void ChooseOption(RPSOption option)
-    {
-        photonView.RPC("RPC_SendChoiceToMaster", RpcTarget.MasterClient,
-            PhotonNetwork.LocalPlayer.ActorNumber, (int)option);
-    }
 
     [PunRPC]
     private void RPC_SendChoiceToMaster(int actorNumber, int option)
@@ -299,24 +267,25 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
 
         if (winner == 0)
         {
-            resultMessage = $"¡Empate! Ambos eligieron {GetChoiceName(p1Choice)} ";
+            resultMessage = $"¡EMPATE!\n\n{player1Name}: {GetChoiceName(p1Choice)}\n{player2Name}: {GetChoiceName(p2Choice)}";
         }
         else if (winner == 1)
         {
             playerScores[player1ActorNumber]++;
-            resultMessage = $"¡{player1Name} gana esta ronda! \n{GetChoiceName(p1Choice)} vs {GetChoiceName(p2Choice)}";
+            resultMessage = $"¡{player1Name} GANA ESTA RONDA! \n\n{GetChoiceName(p1Choice)} vence a {GetChoiceName(p2Choice)}";
         }
         else
         {
             playerScores[player2ActorNumber]++;
-            resultMessage = $"¡{player2Name} gana esta ronda! \n{GetChoiceName(p2Choice)} vs {GetChoiceName(p1Choice)}";
+            resultMessage = $"¡{player2Name} GANA ESTA RONDA! \n\n{GetChoiceName(p2Choice)} vence a {GetChoiceName(p1Choice)}";
         }
 
         Debug.Log(resultMessage);
 
         photonView.RPC("RPC_AnnounceResult", RpcTarget.All,
-            (int)p1Choice, (int)p2Choice, resultMessage,
-            playerScores[player1ActorNumber], playerScores[player2ActorNumber]);
+            resultMessage,
+            playerScores[player1ActorNumber],
+            playerScores[player2ActorNumber]);
 
         if (playerScores[player1ActorNumber] >= WINNING_SCORE)
         {
@@ -336,13 +305,6 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
     private int CalculateWinner(RPSOption choice1, RPSOption choice2)
     {
         if (choice1 == choice2) return 0;
-
-        // Definir qué vence a qué
-        // Piedra (0) vence a Tijera (2) y Lagarto (3)
-        // Papel (1) vence a Piedra (0) y Spock (4)
-        // Tijera (2) vence a Papel (1) y Lagarto (3)
-        // Lagarto (3) vence a Papel (1) y Spock (4)
-        // Spock (4) vence a Piedra (0) y Tijera (2)
 
         switch (choice1)
         {
@@ -385,32 +347,22 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
     #region RPC Results
 
     [PunRPC]
-    private void RPC_AnnounceResult(int p1Choice, int p2Choice, string result, int score1, int score2)
+    private void RPC_AnnounceResult(string resultMessage, int score1, int score2)
     {
-        Debug.Log($"[RESULTADO] {result}");
+        Debug.Log($"[RPC_AnnounceResult] Llamado! Mensaje: {resultMessage}");
 
         playerScores[player1ActorNumber] = score1;
         playerScores[player2ActorNumber] = score2;
 
-        if (resultPanel != null)
+        if (resultText != null)
         {
-            resultPanel.SetActive(true);
-
-            if (resultText != null)
-            {
-                string player1Name = GetPlayerName(player1ActorNumber);
-                string player2Name = GetPlayerName(player2ActorNumber);
-
-                string detailedResult = $"{result}\n\n";
-                detailedResult += $"{player1Name}: {GetChoiceName((RPSOption)p1Choice)}\n";
-                detailedResult += $"{player2Name}: {GetChoiceName((RPSOption)p2Choice)}";
-
-                resultText.text = detailedResult;
-            }
+            resultText.text = resultMessage;
+            Debug.Log($"ResultText actualizado: {resultMessage}");
         }
-
-        if (waitingText != null)
-            waitingText.gameObject.SetActive(false);
+        else
+        {
+            Debug.LogError("ResultText es NULL!");
+        }
 
         UpdateScoreDisplay();
     }
@@ -428,18 +380,17 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
     {
         currentRound = round;
 
-        if (resultPanel != null)
-            resultPanel.SetActive(false);
-
         ResetRound();
         UpdateUI();
+
+        if (resultText != null)
+            resultText.text = "¡Selecciona tu jugada!";
     }
 
     private void ResetRound()
     {
         selectedChoice = RPSOption.None;
         hasSelectedChoice = false;
-        waitingForOpponent = false;
 
         if (selectedChoiceText != null)
             selectedChoiceText.text = "Selecciona tu jugada";
@@ -449,9 +400,6 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
 
         if (sendButton != null)
             sendButton.interactable = false;
-
-        if (waitingText != null)
-            waitingText.gameObject.SetActive(false);
     }
 
     private IEnumerator AnnounceGameWinner(string winnerName)
@@ -464,13 +412,14 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
     [PunRPC]
     private void RPC_ShowVictory(string winnerName)
     {
-        if (gamePanel != null) gamePanel.SetActive(false);
-        if (resultPanel != null) resultPanel.SetActive(false);
-        if (victoryPanel != null) victoryPanel.SetActive(true);
+        EnableChoiceButtons(false);
+        if (sendButton != null)
+            sendButton.interactable = false;
 
-        if (victoryText != null)
+        if (resultText != null)
         {
-            victoryText.text = $" {winnerName} ganó la partida! ";
+            resultText.text = $"\n\n¡{winnerName} GANÓ LA PARTIDA!\n\n";
+            resultText.fontSize = 48;
         }
 
         StartCoroutine(ReturnToMenuAfterDelay());
@@ -494,7 +443,7 @@ public class RPSGameManager : MonoBehaviourPunCallbacks
     {
         if (roundText != null)
         {
-            roundText.text = $"Ronda {currentRound} de {MAX_ROUNDS}";
+            roundText.text = $"Ronda {currentRound} - Primero en llegar a 2";
         }
 
         UpdateScoreDisplay();

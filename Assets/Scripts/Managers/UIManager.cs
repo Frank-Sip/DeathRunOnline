@@ -189,25 +189,25 @@ public class UIManager : MonoBehaviour
     private void HandleRoomCreationFailed(string message)
     {
         Debug.LogError($"UI: Room creation failed - {message}");
-        ShowFeedbackMessage($"Error al crear sala: {message}");
+        ShowFeedbackMessage($"Error creating room: {message}");
     }
 
     private void HandleRoomJoinFailed(string message)
     {
         Debug.LogError($"UI: Room join failed - {message}");
-        ShowFeedbackMessage($"Error al unirse a la sala: {message}");
+        ShowFeedbackMessage($"Error joining room: {message}");
     }
 
     private void HandleMasterServerConnected()
     {
         Debug.Log("UI: Connected to Master Server");
-        ShowFeedbackMessage("Conectado al servidor");
+        ShowFeedbackMessage("Connected to server");
     }
 
     private void HandleRoomJoined(string roomName)
     {
         Debug.Log($"UI: Joined room - {roomName}");
-        ShowFeedbackMessage($"Uniéndose a: {roomName}");
+        ShowFeedbackMessage($"Joining: {roomName}");
     }
     #endregion
 
@@ -508,13 +508,13 @@ public class UIManager : MonoBehaviour
 
         if (PhotonManager.Instance.IsMatchmakingReady())
         {
-            ShowFeedbackMessage($"Creando sala: {roomName}");
+            ShowFeedbackMessage($"Creating room: {roomName}");
             PhotonManager.Instance.JoinOrCreateRoom(roomName);
         }
         else if (createRoomRoutine == null)
         {
             Debug.LogWarning("[UI] Matchmaking not ready. Queuing CreateRoom...");
-            ShowFeedbackMessage("Esperando conexión...");
+            ShowFeedbackMessage("Waiting for connection...");
             createRoomRoutine = StartCoroutine(WaitAndCreateRoom(roomName));
         }
     }
@@ -524,19 +524,19 @@ public class UIManager : MonoBehaviour
         string roomName = roomNameInput != null ? roomNameInput.text : string.Empty;
         if (string.IsNullOrEmpty(roomName))
         {
-            ShowFeedbackMessage("Ingresa un nombre de sala");
+            ShowFeedbackMessage("Enter a room name");
             return;
         }
 
         if (PhotonManager.Instance.IsMatchmakingReady())
         {
-            ShowFeedbackMessage($"Uniéndose a: {roomName}");
+            ShowFeedbackMessage($"Joining: {roomName}");
             PhotonManager.Instance.JoinRoomByName(roomName);
         }
         else if (joinRoomByNameRoutine == null)
         {
             Debug.LogWarning("[UI] Matchmaking not ready. Queuing JoinRoomByName...");
-            ShowFeedbackMessage("Esperando conexión...");
+            ShowFeedbackMessage("Waiting for connection...");
             joinRoomByNameRoutine = StartCoroutine(WaitAndJoinRoomByName(roomName));
         }
     }
@@ -547,13 +547,13 @@ public class UIManager : MonoBehaviour
 
         if (PhotonManager.Instance.IsMatchmakingReady())
         {
-            ShowFeedbackMessage("Buscando sala...");
+            ShowFeedbackMessage("Searching for room...");
             PhotonManager.Instance.JoinOrCreateRoom(roomName);
         }
         else if (joinOrCreateRoutine == null)
         {
             Debug.LogWarning("[UI] Matchmaking not ready. Queuing JoinOrCreate...");
-            ShowFeedbackMessage("Esperando conexión...");
+            ShowFeedbackMessage("Waiting for connection...");
             joinOrCreateRoutine = StartCoroutine(WaitAndJoinOrCreate(roomName));
         }
     }
@@ -561,7 +561,7 @@ public class UIManager : MonoBehaviour
     private void OnRefreshButton()
     {
         Debug.Log("Refreshing room list...");
-        ShowFeedbackMessage("Actualizando lista de salas...");
+        ShowFeedbackMessage("Updating room list...");
     }
     #endregion
 
@@ -671,54 +671,41 @@ public class UIManager : MonoBehaviour
         switch (cause)
         {
             case DisconnectCause.None:
-                return "Desconectado del servidor";
-            
+                return "Disconnected from server";
             case DisconnectCause.ExceptionOnConnect:
             case DisconnectCause.DnsExceptionOnConnect:
             case DisconnectCause.ServerAddressInvalid:
-                return "No se pudo conectar al servidor. Verifica tu conexión";
-            
+                return "Could not connect to server. Check your connection.";
             case DisconnectCause.Exception:
             case DisconnectCause.SendException:
             case DisconnectCause.ReceiveException:
-                return "Error de conexión. Por favor intenta de nuevo";
-            
+                return "Connection error. Please try again.";
             case DisconnectCause.ServerTimeout:
             case DisconnectCause.ClientTimeout:
-                return "Tiempo de espera agotado. Verifica tu conexión";
-            
+                return "Connection timed out. Check your connection.";
             case DisconnectCause.DisconnectByServerLogic:
             case DisconnectCause.DisconnectByServerReasonUnknown:
-                return "Desconectado por el servidor";
-            
+                return "Disconnected by server.";
             case DisconnectCause.InvalidAuthentication:
             case DisconnectCause.CustomAuthenticationFailed:
             case DisconnectCause.AuthenticationTicketExpired:
-                return "Error de autenticación. Reinicia el juego";
-            
+                return "Authentication error. Please restart the game.";
             case DisconnectCause.MaxCcuReached:
-                return "Servidor lleno. Intenta más tarde";
-            
+                return "Server is full. Please try again later.";
             case DisconnectCause.InvalidRegion:
-                return "Región no disponible";
-            
+                return "Region not available.";
             case DisconnectCause.OperationNotAllowedInCurrentState:
-                return "Operación no permitida en este momento";
-            
+                return "Operation not allowed at this time.";
             case DisconnectCause.DisconnectByClientLogic:
-                return "Desconectado";
-            
+                return "Disconnected.";
             case DisconnectCause.DisconnectByOperationLimit:
-                return "Demasiadas operaciones. Espera un momento";
-            
+                return "Too many operations. Please wait a moment.";
             case DisconnectCause.DisconnectByDisconnectMessage:
-                return "Desconectado del servidor";
-            
+                return "Disconnected from server.";
             case DisconnectCause.ApplicationQuit:
-                return "Aplicación cerrada";
-            
+                return "Application closed.";
             default:
-                return "Desconectado del servidor";
+                return "Disconnected from server.";
         }
     }
     public void HideFeedback()

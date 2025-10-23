@@ -13,6 +13,7 @@ public class UIManager : MonoBehaviour
     [Header("Canvas References")]
     [SerializeField] private GameObject mainMenuCanvas;
     [SerializeField] private GameObject lobbyPanel;
+    [SerializeField] private GameObject loadingPanel;
 
     [Header("Input Fields")]
     [SerializeField] private TMP_InputField nameInput;
@@ -239,7 +240,7 @@ public class UIManager : MonoBehaviour
         if (string.IsNullOrEmpty(sceneName))
             sceneName = SceneManager.GetActiveScene().name;
 
-        return sceneName == "MainMenu" || sceneName == "Menu" || sceneName == "Lobby";
+        return sceneName == "MainMenu" || sceneName == "Menu" || sceneName == "Lobby" || sceneName == "Loading";
     }
 
     private void InitializeMenuUI()
@@ -265,6 +266,7 @@ public class UIManager : MonoBehaviour
     private void HideAllCanvases()
     {
         if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
+        if (loadingPanel != null) loadingPanel.SetActive(false);
         if (lobbyPanel != null) lobbyPanel.SetActive(false);
     }
 
@@ -272,6 +274,7 @@ public class UIManager : MonoBehaviour
     {
         if (mainMenuCanvas != null) mainMenuCanvas.SetActive(true);
         if (lobbyPanel != null) lobbyPanel.SetActive(false);
+        if (loadingPanel != null) loadingPanel.SetActive(false);
     }
     #endregion
 
@@ -432,6 +435,7 @@ public class UIManager : MonoBehaviour
         if (connectionButton != null) connectionButton.interactable = false;
         if (continueButton != null) continueButton.interactable = false;
         if (mainMenuCanvas != null) mainMenuCanvas.SetActive(false);
+        if (loadingPanel != null) loadingPanel.SetActive(true);
 
         PhotonManager.Instance.ConnectToPhoton(nickname, selectedSkinIndex);
     }

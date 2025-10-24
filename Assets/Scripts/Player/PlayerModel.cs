@@ -357,37 +357,21 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     {
         if (stream.IsWriting)
         {
-            if (transform != null && rb != null)
-            {
-                stream.SendNext(transform.position);
-                stream.SendNext(transform.rotation);
-                stream.SendNext(rb.velocity);
-            }
-            else
-            {
-                stream.SendNext(Vector3.zero);
-                stream.SendNext(Quaternion.identity);
-                stream.SendNext(Vector3.zero);
-            }
+            stream.SendNext(rb.position);
+            stream.SendNext(rb.rotation);
+            stream.SendNext(rb.velocity);
         }
         else
         {
             Vector3 position = (Vector3)stream.ReceiveNext();
             Quaternion rotation = (Quaternion)stream.ReceiveNext();
-            Vector3 velocity = (Vector3)stream.ReceiveNext();
-
-            if (transform != null)
-            {
-                transform.position = position;
-                transform.rotation = rotation;
-            }
+            rb.velocity = (Vector3)stream.ReceiveNext();
 
             float lag = Mathf.Abs((float)(PhotonNetwork.Time - info.SentServerTime));
-            if (rb != null)
-            {
-                rb.velocity = velocity;
-                position += rb.velocity * lag;
-            }
+            
+            position += rb.velocity * lag;
+            rb.position = position;
+            rb.rotation = rotation;
         }
     }
 

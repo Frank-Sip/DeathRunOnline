@@ -66,6 +66,10 @@ MonoBehaviour:
   - RPC_ClearPlayerTag
   - RPC_DecrementRunnerCount
   - RPC_IncrementRunnerCount
+  - RPC_CloseDoor
+  - RPC_OpenDoor
+  - RPC_PressButton
+  - RPC_ResetButton
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

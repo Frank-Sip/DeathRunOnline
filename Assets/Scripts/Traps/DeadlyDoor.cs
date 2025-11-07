@@ -35,15 +35,20 @@ public class DeadlyDoor : MonoBehaviourPun
     {
         if (AreAllButtonsPressed())
         {
-            shouldMove = true;
+            OpenDoor();
         }
     }
 
     private bool AreAllButtonsPressed()
     {
+        if (requiredButtons == null || requiredButtons.Length == 0)
+        {
+            return false;
+        }
+
         foreach (var button in requiredButtons)
         {
-            if (!button.IsPressed)
+            if (button == null || !button.IsPressed)
             {
                 return false;
             }
@@ -51,4 +56,10 @@ public class DeadlyDoor : MonoBehaviourPun
 
         return true;
     }
+
+    private void OpenDoor()
+    {
+        shouldMove = true;
+    }
 }
+

@@ -169,8 +169,6 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
         isGrounded = hitCount > 0;
 
-
-
         if (isGrounded)
         {
             coyoteTimeCounter = CoyoteTime;

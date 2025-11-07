@@ -4,14 +4,14 @@ using Photon.Pun;
 
 public class FallingPlatform : MonoBehaviourPun, ITrap
 {
-    [SerializeField] private float fallHeight = 2f;
-    [SerializeField] private float activationDuration = 3f;
-    [SerializeField] private float movementSpeed = 5f;
+    [SerializeField] protected float fallHeight = 2f;
+    [SerializeField] protected float activationDuration = 3f;
+    [SerializeField] protected float movementSpeed = 5f;
 
-    private Vector3 initialPosition;
-    private Vector3 fallenPosition;
+    protected Vector3 initialPosition;
+    protected Vector3 fallenPosition;
 
-    private void Start()
+    protected virtual void Start()
     {
         initialPosition = transform.localPosition;
         fallenPosition = initialPosition - Vector3.up * fallHeight;

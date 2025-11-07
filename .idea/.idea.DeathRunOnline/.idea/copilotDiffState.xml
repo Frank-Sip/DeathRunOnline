@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/Assets/Scripts/Traps/IcePlatform.cs">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/Assets/Scripts/Traps/IcePlatform.cs" />
+              <option name="originalContent" value="using System.Collections;&#10;using UnityEngine;&#10;using Photon.Pun;&#10;&#10;public class IcePlatform : MonoBehaviourPun, ITrap&#10;{&#10;    [SerializeField] private PhysicMaterial iceMaterial;&#10;    [SerializeField] private PhysicMaterial normalMaterial;&#10;    [SerializeField] private float activationDuration = 5f;&#10;    [SerializeField] private float slideForce = 2f;&#10;&#10;    private Collider platformCollider;&#10;    private bool isIcy = false;&#10;&#10;    private void Start()&#10;    {&#10;        platformCollider = GetComponent&lt;Collider&gt;();&#10;        if (platformCollider != null &amp;&amp; normalMaterial != null)&#10;        {&#10;            platformCollider.material = normalMaterial;&#10;        }&#10;    }&#10;&#10;    [PunRPC]&#10;    public void RPC_ActivateTrap()&#10;    {&#10;        StartCoroutine(ActivateIce());&#10;    }&#10;&#10;    private IEnumerator ActivateIce()&#10;    {&#10;        isIcy = true;&#10;        platformCollider.material = iceMaterial;&#10;        yield return new WaitForSeconds(activationDuration);&#10;        isIcy = false;&#10;        platformCollider.material = normalMaterial;&#10;    }&#10;&#10;    private void OnCollisionStay(Collision collision)&#10;    {&#10;        if (!isIcy) return;&#10;&#10;        Rigidbody rb = collision.rigidbody;&#10;        &#10;        Vector3 slideDirection = rb.velocity.normalized;&#10;        if (slideDirection.magnitude &gt; 0.1f)&#10;        {&#10;            rb.AddForce(slideDirection * slideForce, ForceMode.Acceleration);&#10;        }&#10;    }&#10;}" />
+              <option name="updatedContent" value="using System.Collections;&#10;using UnityEngine;&#10;using Photon.Pun;&#10;&#10;public class IcePlatform : MonoBehaviourPun, ITrap&#10;{&#10;    [SerializeField] private PhysicMaterial iceMaterial;&#10;    [SerializeField] private PhysicMaterial normalMaterial;&#10;    [SerializeField] private float activationDuration = 5f;&#10;&#10;    private Collider platformCollider;&#10;&#10;    private void Start()&#10;    {&#10;        platformCollider = GetComponent&lt;Collider&gt;();&#10;        if (platformCollider != null &amp;&amp; normalMaterial != null)&#10;        {&#10;            platformCollider.material = normalMaterial;&#10;        }&#10;    }&#10;&#10;    [PunRPC]&#10;    public void RPC_ActivateTrap()&#10;    {&#10;        StartCoroutine(ActivateIce());&#10;    }&#10;&#10;    private IEnumerator ActivateIce()&#10;    {&#10;        platformCollider.material = iceMaterial;&#10;        yield return new WaitForSeconds(activationDuration);&#10;        platformCollider.material = normalMaterial;&#10;    }&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

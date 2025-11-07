@@ -3,11 +3,12 @@ using Photon.Pun;
 
 public class DeadlyDoorButtons : MonoBehaviourPun, IInteractable
 {
+    [SerializeField] private bool isPressed = false;
     [SerializeField] private Material pressedMaterial;
     [SerializeField] private Material unpressedMaterial;
+    [SerializeField] private float pressDownAmount = 0.1f;
     [SerializeField] private DeadlyDoor door;
     
-    private bool isPressed = false;
     private Vector3 originalPosition;
     private MeshRenderer meshRenderer;
     
@@ -32,7 +33,9 @@ public class DeadlyDoorButtons : MonoBehaviourPun, IInteractable
     private void RPC_PressButton()
     {
         isPressed = true;
+        transform.position = originalPosition - Vector3.up * pressDownAmount;
         meshRenderer.material = pressedMaterial;
         door.CheckButtons();
     }
 }
+

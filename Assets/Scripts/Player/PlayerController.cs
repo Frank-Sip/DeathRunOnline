@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿﻿using System.Collections;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -208,6 +208,11 @@ public class PlayerController : MonoBehaviour
             {
                 SetAnimatorTrigger("PunchTrigger");
             }
+        }
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            playerModel.TryGrab();
         }
     }
 

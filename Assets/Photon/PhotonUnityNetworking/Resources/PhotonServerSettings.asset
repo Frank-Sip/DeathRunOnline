@@ -70,6 +70,8 @@ MonoBehaviour:
   - RPC_OpenDoor
   - RPC_PressButton
   - RPC_ResetButton
+  - RPC_GrabPlayer
+  - RPC_ReleaseGrab
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -174,16 +174,23 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     public void Move(Vector3 moveDirection, Vector3 currentVelocity)
     {
         if (isStunned || !isAlive) return;
-      
+        
         Vector3 adjustedMoveDirection = moveDirection * iceControlMultiplier;
         
         if (isOnIce)
         {
-            Vector3 targetVelocity = adjustedMoveDirection * MoveSpeed;
-            Vector3 velocityChange = targetVelocity - new Vector3(rb.velocity.x, 0, rb.velocity.z);
-
-            rb.AddForce(velocityChange * 2f, ForceMode.Force);
-            rb.velocity = new Vector3(rb.velocity.x, currentVelocity.y, rb.velocity.z);
+            if (adjustedMoveDirection.magnitude > 0.01f)
+            {
+                Vector3 force = adjustedMoveDirection * MoveSpeed * 10f; 
+                rb.AddForce(force, ForceMode.Force);
+            }
+            
+            Vector3 horizontalVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+            if (horizontalVelocity.magnitude > MoveSpeed * 1.5f)
+            {
+                horizontalVelocity = horizontalVelocity.normalized * MoveSpeed * 1.5f;
+                rb.velocity = new Vector3(horizontalVelocity.x, rb.velocity.y, horizontalVelocity.z);
+            }
         }
         else
         {
@@ -194,7 +201,6 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
- 
         }
     }
 

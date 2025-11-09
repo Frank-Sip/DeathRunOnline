@@ -3297,8 +3297,8 @@ GameObject:
   - component: {fileID: 748696105}
   - component: {fileID: 748696108}
   - component: {fileID: 748696107}
-  - component: {fileID: 748696110}
   - component: {fileID: 748696109}
+  - component: {fileID: 748696110}
   m_Layer: 0
   m_Name: IceSurface
   m_TagString: Untagged
@@ -3383,21 +3383,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cedf65585392780479e2a605c59e236b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  iceSlipForce: 10
   controlReduction: 0.7
---- !u!65 &748696110
-BoxCollider:
+--- !u!64 &748696110
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 748696104}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 0c595c8134f007649870d5a74f4b09b2, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 10, y: 2.220446e-16, z: 9.999999}
-  m_Center: {x: 0, y: 0, z: -0.000000039115548}
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &754970033
 GameObject:
   m_ObjectHideFlags: 0

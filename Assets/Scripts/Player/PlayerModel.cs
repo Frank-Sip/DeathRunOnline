@@ -181,7 +181,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         {
             if (adjustedMoveDirection.magnitude > 0.01f)
             {
-                Vector3 force = adjustedMoveDirection * MoveSpeed * 10f; 
+                Vector3 force = adjustedMoveDirection * MoveSpeed * 200f; 
                 rb.AddForce(force, ForceMode.Force);
             }
             

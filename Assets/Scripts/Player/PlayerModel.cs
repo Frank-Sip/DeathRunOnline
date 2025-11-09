@@ -44,6 +44,10 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     private const float grabDuration = 3f;
     private Vector3 grabOffset = Vector3.zero;
 
+    // Ice Surface variables
+    private bool isOnIce = false;
+    private float iceControlMultiplier = 1f;
+
     public bool isAlive = true;
     public PhotonView PhotonView => photonView ?? GetComponent<PhotonView>();
     public bool IsGrounded => isGrounded;
@@ -170,7 +174,21 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     public void Move(Vector3 moveDirection, Vector3 currentVelocity)
     {
         if (isStunned || !isAlive) return;
-        rb.velocity = moveDirection * MoveSpeed + new Vector3(0, currentVelocity.y, 0);
+      
+        Vector3 adjustedMoveDirection = moveDirection * iceControlMultiplier;
+        
+        if (isOnIce)
+        {
+            Vector3 targetVelocity = adjustedMoveDirection * MoveSpeed;
+            Vector3 velocityChange = targetVelocity - new Vector3(rb.velocity.x, 0, rb.velocity.z);
+
+            rb.AddForce(velocityChange * 2f, ForceMode.Force);
+            rb.velocity = new Vector3(rb.velocity.x, currentVelocity.y, rb.velocity.z);
+        }
+        else
+        {
+            rb.velocity = adjustedMoveDirection * MoveSpeed + new Vector3(0, currentVelocity.y, 0);
+        }
 
         if (moveDirection != Vector3.zero)
         {
@@ -275,6 +293,12 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     public Vector3 GetRigidbodyVelocity()
     {
         return rb.velocity;
+    }
+
+    public void SetOnIce(bool onIce, float controlMultiplier)
+    {
+        isOnIce = onIce;
+        iceControlMultiplier = controlMultiplier;
     }
 
     public void Die()

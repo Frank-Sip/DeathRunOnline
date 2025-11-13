@@ -30,7 +30,7 @@ public class FallingPlatform : MonoBehaviourPun, ITrap
         yield return MoveLavaObject(initialPosition);
     }
 
-    private IEnumerator MoveLavaObject(Vector3 targetPosition)
+    protected IEnumerator MoveLavaObject(Vector3 targetPosition)
     {
         while (Vector3.Distance(transform.localPosition, targetPosition) > 0.01f)
         {

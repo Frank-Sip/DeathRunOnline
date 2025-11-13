@@ -449,6 +449,17 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         stunTimer = duration;
     }
 
+    [PunRPC]
+    public void RPC_ApplyForce(Vector3 force)
+    {
+        if (!PhotonView.IsMine) return;
+        
+        if (rb != null)
+        {
+            rb.AddForce(force, ForceMode.VelocityChange);
+        }
+    }
+
     [ContextMenu("GetID")]
     public void PrintID()
     {

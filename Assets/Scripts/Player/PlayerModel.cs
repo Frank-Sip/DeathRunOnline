@@ -440,6 +440,15 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         }
     }
 
+    [PunRPC]
+    public void RPC_ApplyStun(float duration)
+    {
+        if (!PhotonView.IsMine) return;
+        
+        isStunned = true;
+        stunTimer = duration;
+    }
+
     [ContextMenu("GetID")]
     public void PrintID()
     {

@@ -72,6 +72,7 @@ MonoBehaviour:
   - RPC_ResetButton
   - RPC_GrabPlayer
   - RPC_ReleaseGrab
+  - RPC_ApplyStun
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

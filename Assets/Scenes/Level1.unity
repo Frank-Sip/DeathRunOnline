@@ -6456,8 +6456,8 @@ MonoBehaviour:
   isPressed: 0
   pressedMaterial: {fileID: 2100000, guid: 36f28bca2af2b5d4c80143bdfd8c6637, type: 2}
   unpressedMaterial: {fileID: 2100000, guid: af7661d6e6a31374583e22dd2d2a9b7d, type: 2}
-  pressDownAmount: 0.1
   door: {fileID: 136674272}
+  pressDuration: 1
 --- !u!136 &1137603106
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -12714,6 +12714,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2075078186}
     m_Modifications:
+    - target: {fileID: 5642678092569357401, guid: 4d5ff35b3252e4f4fb683b4ff88cf260, type: 3}
+      propertyPath: gameManager
+      value: 
+      objectReference: {fileID: 671944456}
     - target: {fileID: 5642678092569357401, guid: 4d5ff35b3252e4f4fb683b4ff88cf260, type: 3}
       propertyPath: requiredButtons.Array.data[0]
       value: 

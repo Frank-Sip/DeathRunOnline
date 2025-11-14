@@ -19,6 +19,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     private int aliveRunnersCount = 0;
     private bool gameEnded = false;
     private bool matchStarted = false;
+    
+    public int ALiveRunnersCount => aliveRunnersCount;
 
     private void Awake()
     {
@@ -38,7 +40,6 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public void StartMatch()
     {
-        //aliveRunnersCount = 0;
         gameEnded = false;
         matchStarted = true;
 
@@ -70,11 +71,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (aliveRunnersCount <= 0)
         {
             Player killer = GameTagManager.Instance.GetKillerPlayer();
-            if (killer != null)
-            {
-                Debug.Log($"----GameManager: Procesando victoria de Killer: {killer.NickName}");
-                photonView.RPC("RPC_ShowVictory", RpcTarget.All, killer.NickName, "Killer");
-            }
+            photonView.RPC("RPC_ShowVictory", RpcTarget.All, killer.NickName, "Killer");
         }
     }
 

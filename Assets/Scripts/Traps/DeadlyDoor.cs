@@ -6,6 +6,7 @@ public class DeadlyDoor : MonoBehaviourPun
     [SerializeField] private DeadlyDoorButtons[] requiredButtons;
     [SerializeField] private float openHeight = 5f;
     [SerializeField] private float openSpeed = 2f;
+    [SerializeField] private GameManager gameManager;
 
     private float targetHeight;
     private float startHeight;
@@ -29,6 +30,11 @@ public class DeadlyDoor : MonoBehaviourPun
                 shouldMove = false;
             }
         }
+
+        if (gameManager.ALiveRunnersCount == 1)
+        {
+            OpenDoor();
+        }
     }
 
     public void CheckButtons()
@@ -41,14 +47,9 @@ public class DeadlyDoor : MonoBehaviourPun
 
     private bool AreAllButtonsPressed()
     {
-        if (requiredButtons == null || requiredButtons.Length == 0)
-        {
-            return false;
-        }
-
         foreach (var button in requiredButtons)
         {
-            if (button == null || !button.IsPressed)
+            if (!button.IsPressed)
             {
                 return false;
             }

@@ -20,7 +20,9 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     [Header("Interaction Settings")]
     [SerializeField] private Transform interactionPoint;
     [SerializeField] private float interactionRadius = 2f;
+    [SerializeField] private float stunDuration = 1f;
     [SerializeField] private LayerMask interactionLayer;
+    [SerializeField] private float grabDuration = 3f;
 
     [Header("See Player Tags")]
     public KeyCode seeTagKey = KeyCode.Tab;
@@ -41,10 +43,8 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     private PlayerModel grabbedPlayer = null;
     private PlayerModel grabber = null;
     private float grabTimer = 0f;
-    private const float grabDuration = 3f;
     private Vector3 grabOffset = Vector3.zero;
 
-    // Ice Surface variables
     private bool isOnIce = false;
     private float iceControlMultiplier = 1f;
 
@@ -150,7 +150,12 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
     public void Interact()
     {
-        PhotonView.RPC("RPC_PushPlayer", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
+        PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
+
+        if (!isBeingGrabbed)
+        {
+            PhotonView.RPC("RPC_PushPlayer", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
+        }
     }
 
     private void OnPlayerPropertiesUpdate(ExitGames.Client.Photon.EventData photonEvent)
@@ -230,18 +235,35 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
     public void TryInteract()
     {
-        if (isStunned || !isAlive || isGrabbing || isBeingGrabbed) return;
-        int elements = Physics.OverlapSphereNonAlloc(interactionPoint.position, interactionRadius, interactables, interactionLayer);
-
-        for (int i = 0; i < elements; i++)
+        if (isStunned || !isAlive || isGrabbing) return;
+        
+        if (isBeingGrabbed && grabber != null)
         {
-            var interactable = interactables[i];
-            var interactableComponent = interactable.GetComponent<IInteractable>();
-
-            if (interactableComponent != null)
+            float distanceToGrabber = Vector3.Distance(transform.position, grabber.transform.position);
+            if (distanceToGrabber <= interactionRadius)
             {
-                interactableComponent.Interact();
+                grabber.PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
+                grabber.PhotonView.RPC("RPC_ReleaseGrab", RpcTarget.All, PhotonView.ViewID);
                 return;
+            }
+        }
+        
+        if (!isBeingGrabbed)
+        {
+            int elements = Physics.OverlapSphereNonAlloc(interactionPoint.position, interactionRadius, interactables, interactionLayer);
+            
+            photonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
+            
+            for (int i = 0; i < elements; i++)
+            {
+                var interactable = interactables[i];
+                var interactableComponent = interactable.GetComponent<IInteractable>();
+
+                if (interactableComponent != null)
+                {
+                    interactableComponent.Interact();
+                    return;
+                }
             }
         }
     }
@@ -383,9 +405,6 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         pushDirection.y = 0;
 
         rb.AddForce(pushDirection * PushForce, ForceMode.Impulse);
-
-        isStunned = true;
-        stunTimer = StunDuration;
         PlayerController controller = GetComponent<PlayerController>();
         controller.OnReceivePunch();
     }

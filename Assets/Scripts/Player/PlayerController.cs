@@ -204,7 +204,7 @@ public class PlayerController : MonoBehaviour
         {
             playerModel.TryInteract();
 
-            if (animatorReady && animator != null)
+            if (animatorReady)
             {
                 SetAnimatorTrigger("PunchTrigger");
             }

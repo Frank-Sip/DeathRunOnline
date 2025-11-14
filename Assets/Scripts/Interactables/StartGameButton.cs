@@ -11,6 +11,12 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
     [SerializeField] private int minimumPlayersRequired = 2;
 
     private bool isActive = true;
+    private static float matchStartTime;
+
+    public static float GetElapsedTime()
+    {
+        return Time.time - matchStartTime;
+    }
 
     public void Interact()
     {
@@ -23,11 +29,11 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
         photonView.RPC("RPC_SetButtonActive", RpcTarget.All, false);
         photonView.RPC("RPC_StartGame", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
     }
+
     private bool HasMinimumPlayers()
     {
         return PhotonNetwork.PlayerList.Length >= minimumPlayersRequired;
     }
-
 
     [PunRPC]
     private void RPC_SetButtonActive(bool active)
@@ -38,6 +44,11 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
     [PunRPC]
     private void RPC_StartGame(int requesterActorNumber)
     {
+        // Guardar el nombre del jugador en LootLocker
+        string playerName = PhotonNetwork.LocalPlayer.NickName;
+        PlayerNameHelper.SetPlayerName(playerName);
+        Debug.Log($"[StartGameButton] Nombre guardado en LootLocker: {playerName}");
+
         if (PhotonNetwork.LocalPlayer.ActorNumber == requesterActorNumber)
         {
             StartCoroutine(StartGameSequence());
@@ -48,10 +59,25 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
     {
         SetRoomPrivate();
         photonView.RPC("RPC_RemovePreLobbyWall", RpcTarget.All);
+
         gameTagManager.AssignRandomTags();
+
+        // Iniciar el timer cuando comienza la partida
+        matchStartTime = Time.time;
+        photonView.RPC("RPC_SyncMatchStartTime", RpcTarget.AllBuffered, matchStartTime);
+        Debug.Log($"[StartGameButton] Timer iniciado en: {matchStartTime}");
+
         GameManager.Instance.StartMatch();
+
         yield return new WaitForSeconds(0.5f);
         TeleportKillerToSpawn();
+    }
+
+    [PunRPC]
+    private void RPC_SyncMatchStartTime(float startTime)
+    {
+        matchStartTime = startTime;
+        Debug.Log($"[StartGameButton] Timer sincronizado: {matchStartTime}");
     }
 
     [PunRPC]
@@ -63,26 +89,25 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
             Debug.Log("Pre-lobby wall removed - Game area is now accessible");
         }
     }
+
     private void SetRoomPrivate()
     {
         if (PhotonNetwork.CurrentRoom != null)
         {
             Room currentRoom = PhotonNetwork.CurrentRoom;
-            currentRoom.IsOpen = false;  
-            currentRoom.IsVisible = false; 
+            currentRoom.IsOpen = false;
+            currentRoom.IsVisible = false;
         }
     }
 
     private void TeleportKillerToSpawn()
     {
         PlayerModel[] allPlayers = FindObjectsOfType<PlayerModel>();
-
         foreach (PlayerModel player in allPlayers)
         {
             if (player.PhotonView.Owner.CustomProperties.TryGetValue("playerTag", out object tagValue))
             {
                 string playerTag = tagValue.ToString();
-
                 if (playerTag.ToLower() == "killer")
                 {
                     player.PhotonView.RPC("RPC_TeleportPlayer", RpcTarget.All, killerSpawnPoint.position);

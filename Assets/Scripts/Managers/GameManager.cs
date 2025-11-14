@@ -16,6 +16,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private float displayTime = 3f;
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
+    [Header("LootLocker Settings")]
+    [SerializeField] private string leaderboardKey = "leaderboard_key";
+
     private int aliveRunnersCount = 0;
     private bool gameEnded = false;
     private bool matchStarted = false;
@@ -38,10 +41,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public void StartMatch()
     {
-        //aliveRunnersCount = 0;
         gameEnded = false;
         matchStarted = true;
-
         Debug.Log($"Match started. Waiting for runner count...");
     }
 
@@ -73,7 +74,8 @@ public class GameManager : MonoBehaviourPunCallbacks
             if (killer != null)
             {
                 Debug.Log($"----GameManager: Procesando victoria de Killer: {killer.NickName}");
-                photonView.RPC("RPC_ShowVictory", RpcTarget.All, killer.NickName, "Killer");
+                float elapsedTime = StartGameButton.GetElapsedTime();
+                photonView.RPC("RPC_ShowVictory", RpcTarget.All, killer.NickName, "Killer", elapsedTime);
             }
         }
     }
@@ -83,11 +85,12 @@ public class GameManager : MonoBehaviourPunCallbacks
         if (gameEnded) return;
 
         Debug.Log($"GameManager: Procesando victoria de Runner: {runnerNickname}");
-        photonView.RPC("RPC_ShowVictory", RpcTarget.All, runnerNickname, "Runner");
+        float elapsedTime = StartGameButton.GetElapsedTime();
+        photonView.RPC("RPC_ShowVictory", RpcTarget.All, runnerNickname, "Runner", elapsedTime);
     }
 
     [PunRPC]
-    private void RPC_ShowVictory(string winnerNickname, string winnerType)
+    private void RPC_ShowVictory(string winnerNickname, string winnerType, float finalTime)
     {
         if (gameEnded) return;
 
@@ -99,12 +102,40 @@ public class GameManager : MonoBehaviourPunCallbacks
             victoryCanvas.SetActive(true);
             if (victoryText != null)
             {
-                victoryText.text = $"{winnerNickname} Ganó!";
+                int timeInSeconds = Mathf.FloorToInt(finalTime);
+                victoryText.text = $"{winnerNickname} Ganó!\nTiempo: {timeInSeconds}s";
             }
         }
 
-        Debug.Log($"¡{winnerNickname} ({winnerType}) ha ganado la partida!");
+        Debug.Log($"¡{winnerNickname} ({winnerType}) ha ganado la partida en {finalTime:F2} segundos!");
+
+        // Enviar score a LootLocker (solo el ganador local)
+        if (PhotonNetwork.LocalPlayer.NickName == winnerNickname)
+        {
+            SubmitScoreToLeaderboard(finalTime);
+        }
+
         StartCoroutine(LoadMainMenuAfterDelay());
+    }
+
+    private void SubmitScoreToLeaderboard(float time)
+    {
+        // Convertir tiempo a segundos (como entero para el score)
+        int scoreInSeconds = Mathf.FloorToInt(time);
+
+        Debug.Log($"[GameManager] Enviando score a LootLocker: {scoreInSeconds} segundos");
+
+        LeaderboardService.SubmitScore(scoreInSeconds, leaderboardKey, success =>
+        {
+            if (success)
+            {
+                Debug.Log($"[GameManager] ¡Score enviado exitosamente! Tiempo: {scoreInSeconds}s");
+            }
+            else
+            {
+                Debug.LogError($"[GameManager] Error al enviar el score a LootLocker");
+            }
+        });
     }
 
     private IEnumerator LoadMainMenuAfterDelay()

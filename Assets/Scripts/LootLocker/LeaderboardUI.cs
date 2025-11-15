@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class LeaderboardUI : MonoBehaviour
 {
-    [SerializeField] string leaderboardKey = "leaderboard_key";
+    [SerializeField] string leaderboardKey = "leaderboard_key2";
     [SerializeField] int count = 10;
     [SerializeField] TMPro.TextMeshProUGUI tableText;
 
@@ -22,30 +22,66 @@ public class LeaderboardUI : MonoBehaviour
         {
             if (!response.success)
             {
-                tableText.text = "Error...";
+                tableText.text = $"Error: {response.errorData?.message}";
+                return;
             }
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Rank Name              Score");
-            sb.AppendLine("-----------------------------");
+            sb.AppendLine("Rank  Name            Role     Time");
+            sb.AppendLine("------------------------------------------");
 
             var items = response.items;
 
             if (items == null || items.Length == 0)
             {
-                sb.AppendLine("No se registro nada todavia");
+                sb.AppendLine("No hay records todavia");
             }
             else
             {
                 foreach (var item in items)
                 {
-                    string name = string.IsNullOrEmpty(item.player.name) ? "Player " + item.player.id : item.player.name;
-                    sb.AppendLine($"{item.rank,4}  {name,-16} {item.score,6}");
+                    string name = string.IsNullOrEmpty(item.player.name) ? "Player" + item.player.id : item.player.name;
+
+                    string role = ExtractRoleFromMetadata(item.metadata);
+
+                    string timeFormatted = FormatTime(item.score);
+
+                    if (name.Length > 14)
+                        name = name.Substring(0, 14);
+
+                    sb.AppendLine($"{item.rank,4}  {name,-14}  {role,-7}  {timeFormatted}");
                 }
             }
 
             tableText.text = sb.ToString();
         });
+    }
+
+    private string ExtractRoleFromMetadata(string metadata)
+    {
+        if (string.IsNullOrEmpty(metadata))
+            return "Unknown";
+
+        try
+        {
+            if (metadata.Contains("Killer"))
+                return "Killer";
+            else if (metadata.Contains("Runner"))
+                return "Runner";
+            else
+                return "Unknown";
+        }
+        catch
+        {
+            return "Unknown";
+        }
+    }
+
+    private string FormatTime(int milliseconds)
+    {
+        int seconds = milliseconds / 1000;
+        int ms = milliseconds % 1000;
+        return $"{seconds}s {ms}ms";
     }
 
     public void OnSubmitScoreTMP(TMPro.TMP_InputField scoreInput)
@@ -61,6 +97,15 @@ public class LeaderboardUI : MonoBehaviour
         PlayerNameHelper.SetPlayerName(nameInput.text);
     }
 
-
-
+    public void BackToLobby()
+    {
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.HideLeaderboard();
+        }
+        else
+        {
+            Debug.LogError("UIManager.Instance is null! Cannot return to lobby.");
+        }
+    }
 }

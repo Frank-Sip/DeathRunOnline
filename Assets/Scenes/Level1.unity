@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.3570232, g: 0.6970393, b: 0.7235334, a: 1}
+  m_IndirectSpecularColor: {r: 0.35700357, g: 0.69702154, b: 0.7235342, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3249,6 +3249,7 @@ MonoBehaviour:
   victoryText: {fileID: 215602025}
   displayTime: 3
   mainMenuSceneName: MainMenu
+  leaderboardKey: leaderboard_key2
 --- !u!4 &671944457
 Transform:
   m_ObjectHideFlags: 0
@@ -10618,7 +10619,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1838626822}
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 77.5, y: 1.72, z: 341}
+  m_LocalPosition: {x: 58.1, y: 1.72, z: 342.3}
   m_LocalScale: {x: 45.3112, y: 5.823417, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

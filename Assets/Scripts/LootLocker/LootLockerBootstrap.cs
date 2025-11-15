@@ -7,7 +7,7 @@ public class LootLockerBootstrap : MonoBehaviour
 {
     public static bool SessionStarted {  get; private set; }
 
-    [SerializeField] string playerIdentifier = "1";
+    [SerializeField] string playerIdentifier = "ejemplo";
 
     private void Awake()
     {

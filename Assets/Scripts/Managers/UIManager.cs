@@ -44,6 +44,10 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text feedbackText;
     [SerializeField] private float feedbackDisplayTime = 3f;
 
+    [Header("Leaderboard")]
+    [SerializeField] private GameObject leaderboardCanvas;
+    [SerializeField] private LeaderboardUI leaderboardUI;
+
     private const string nickNameKey = "playerNickname";
     private const string skinKey = "playerSkin";
 
@@ -718,6 +722,42 @@ public class UIManager : MonoBehaviour
 
         if (feedbackPanel != null)
             feedbackPanel.SetActive(false);
+    }
+    #endregion
+
+    #region Leaderboard Management
+    public void ShowLeaderboard()
+    {
+        if (leaderboardCanvas == null || leaderboardUI == null)
+        {
+            Debug.LogError("Leaderboard Canvas or LeaderboardUI not assigned in UIManager!");
+            return;
+        }
+
+        Debug.Log("Showing Leaderboard");
+        
+        // Ocultar el lobby
+        if (lobbyPanel != null)
+            lobbyPanel.SetActive(false);
+
+        // Mostrar el leaderboard
+        leaderboardCanvas.SetActive(true);
+
+        // Refrescar automáticamente
+        leaderboardUI.Refresh();
+    }
+
+    public void HideLeaderboard()
+    {
+        Debug.Log("Hiding Leaderboard, returning to Lobby");
+
+        // Ocultar el leaderboard
+        if (leaderboardCanvas != null)
+            leaderboardCanvas.SetActive(false);
+
+        // Mostrar el lobby
+        if (lobbyPanel != null)
+            lobbyPanel.SetActive(true);
     }
     #endregion
 }

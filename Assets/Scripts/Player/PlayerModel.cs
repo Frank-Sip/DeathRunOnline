@@ -470,6 +470,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         isStunned = true;
         stunTimer = duration;
         rb.velocity = new Vector3(0, rb.velocity.y, 0);
+        GetComponent<PlayerController>().OnStunned();
     }
 
     [PunRPC]

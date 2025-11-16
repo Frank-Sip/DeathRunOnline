@@ -292,6 +292,13 @@ public class PlayerController : MonoBehaviour
             SetCursorLock(true);
         }
     }
+    public void OnStunned()
+    {
+        if (animatorReady && animator != null)
+        {
+            SetAnimatorTrigger("StunnedTrigger");
+        }
+    }
 
     private void SetCursorLock(bool lockCursor)
     {

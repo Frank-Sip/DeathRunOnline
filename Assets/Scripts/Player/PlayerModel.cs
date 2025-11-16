@@ -117,21 +117,26 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             }
         }
 
-        if (PhotonView.IsMine)
-        {
-            if (isGrabbing)
-            {
-                grabTimer -= Time.deltaTime;
-                if (grabTimer <= 0)
-                {
-                    ReleaseGrab();
-                }
-            }
+        if (!PhotonView.IsMine)
+            return;
 
-            if (isBeingGrabbed)
+        if (isBeingGrabbed)
+        {
+            rb.velocity = Vector3.zero;
+
+            if (grabber != null)
             {
-                Vector3 targetPosition = grabber.transform.position + grabOffset;
-                rb.position = Vector3.Lerp(rb.position, targetPosition, 10f * Time.deltaTime);
+                Vector3 targetPos = grabber.transform.position + grabOffset;
+                rb.position = Vector3.Lerp(rb.position, targetPos, 10f * Time.deltaTime);
+            }
+            return;
+        }
+        if (isGrabbing)
+        {
+            grabTimer -= Time.deltaTime;
+            if (grabTimer <= 0)
+            {
+                ReleaseGrab();
             }
         }
     }
@@ -235,35 +240,33 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
     public void TryInteract()
     {
-        if (isStunned || !isAlive || isGrabbing) return;
-        
+        if (!isAlive) return;
+
         if (isBeingGrabbed && grabber != null)
         {
-            float distanceToGrabber = Vector3.Distance(transform.position, grabber.transform.position);
-            if (distanceToGrabber <= interactionRadius)
+            float distance = Vector3.Distance(transform.position, grabber.transform.position);
+
+            if (distance <= interactionRadius)
             {
                 grabber.PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
                 grabber.PhotonView.RPC("RPC_ReleaseGrab", RpcTarget.All, PhotonView.ViewID);
                 return;
             }
         }
-        
-        if (!isBeingGrabbed)
-        {
-            int elements = Physics.OverlapSphereNonAlloc(interactionPoint.position, interactionRadius, interactables, interactionLayer);
-            
-            photonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
-            
-            for (int i = 0; i < elements; i++)
-            {
-                var interactable = interactables[i];
-                var interactableComponent = interactable.GetComponent<IInteractable>();
+        if (isStunned || isGrabbing)
+            return;
 
-                if (interactableComponent != null)
-                {
-                    interactableComponent.Interact();
-                    return;
-                }
+        PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
+
+        int count = Physics.OverlapSphereNonAlloc(interactionPoint.position, interactionRadius, interactables, interactionLayer);
+
+        for (int i = 0; i < count; i++)
+        {
+            var interactableComp = interactables[i].GetComponent<IInteractable>();
+            if (interactableComp != null)
+            {
+                interactableComp.Interact();
+                return;
             }
         }
     }

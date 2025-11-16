@@ -272,7 +272,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     {
         if (isStunned || !isAlive || isGrabbing || isBeingGrabbed) return;
 
-        int elements = Physics.OverlapSphereNonAlloc(interactionPoint.position, interactionRadius, interactables);
+        int elements = Physics.OverlapSphereNonAlloc(interactionPoint.position, interactionRadius, interactables, interactionLayer);
 
         for (int i = 0; i < elements; i++)
         {

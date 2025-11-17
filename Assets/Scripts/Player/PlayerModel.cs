@@ -51,6 +51,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     public bool isAlive = true;
     public PhotonView PhotonView => photonView ?? GetComponent<PhotonView>();
     public bool IsGrounded => isGrounded;
+    public bool IsOnIce => isOnIce;
     public float CoyoteTimeCounter => coyoteTimeCounter;
     public float JumpBufferCounter => jumpBufferCounter;
     public Action<PlayerModel> OnPlayerDeath;
@@ -238,9 +239,9 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         }
     }
 
-    public void TryInteract()
+    public bool TryInteract()
     {
-        if (!isAlive) return;
+        if (!isAlive) return false;
 
         if (isBeingGrabbed && grabber != null)
         {
@@ -250,25 +251,44 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             {
                 grabber.PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
                 grabber.PhotonView.RPC("RPC_ReleaseGrab", RpcTarget.All, PhotonView.ViewID);
-                return;
+                return false;
             }
         }
         if (isStunned || isGrabbing)
-            return;
-
-        PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
+            return false;
 
         int count = Physics.OverlapSphereNonAlloc(interactionPoint.position, interactionRadius, interactables, interactionLayer);
 
+        bool interactedWithButton = false;
         for (int i = 0; i < count; i++)
         {
             var interactableComp = interactables[i].GetComponent<IInteractable>();
             if (interactableComp != null)
             {
+                // Verificar si es un botón
+                if (interactables[i].GetComponent<ButtonTrap>() != null || 
+                    interactables[i].GetComponent<StartGameButton>() != null ||
+                    interactables[i].GetComponent<DeadlyDoorButtons>() != null ||
+                    interactables[i].name.ToLower().Contains("button"))
+                {
+                    interactedWithButton = true;
+                }
+                
                 interactableComp.Interact();
-                return;
+                
+                // Solo aplicar stun si NO es un botón
+                if (!interactedWithButton)
+                {
+                    PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
+                }
+                
+                return interactedWithButton;
             }
         }
+        
+        // Si no hay ningún interactuable, aplicar stun (es un golpe al aire o a un jugador)
+        PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
+        return false;
     }
 
     public void TryGrab()

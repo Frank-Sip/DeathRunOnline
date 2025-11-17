@@ -467,6 +467,11 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     {
         if (!PhotonView.IsMine) return;
         
+        if (isGrabbing && grabbedPlayer != null)
+        {
+            PhotonView.RPC("RPC_ReleaseGrab", RpcTarget.All, grabbedPlayer.PhotonView.ViewID);
+        }
+        
         isStunned = true;
         stunTimer = duration;
         rb.velocity = new Vector3(0, rb.velocity.y, 0);

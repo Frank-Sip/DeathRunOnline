@@ -1,4 +1,4 @@
-﻿﻿using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -11,7 +11,6 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private Animator animator;
     private bool animatorReady = false;
-
     private bool wasGrounded = true;
     private bool wasMoving = false;
 
@@ -22,12 +21,10 @@ public class PlayerController : MonoBehaviour
         playerModel = GetComponent<PlayerModel>();
         playerView = GetComponent<PlayerView>();
         playerUI = GetComponent<PlayerNickname>();
-
         StartCoroutine(InitializeAnimator());
 
         bool isLocalPlayer = playerModel.PhotonView.IsMine;
         string playerName = playerModel.PhotonView.Owner.NickName;
-
         playerUI.Initialize(playerName);
 
         if (isLocalPlayer)
@@ -46,7 +43,7 @@ public class PlayerController : MonoBehaviour
 
     private IEnumerator InitializeAnimator()
     {
-        yield return new WaitForSeconds(0.3f); 
+        yield return new WaitForSeconds(0.3f);
 
         int maxAttempts = 15;
         int attempts = 0;
@@ -71,7 +68,7 @@ public class PlayerController : MonoBehaviour
 
         if (!animatorReady)
         {
-            Debug.LogError($"Failed to initialize animator after {maxAttempts} attempts for ");
+            Debug.LogError($"Failed to initialize animator after {maxAttempts} attempts");
         }
     }
 
@@ -82,6 +79,10 @@ public class PlayerController : MonoBehaviour
         SetAnimatorBool("IsGrounded", playerModel.IsGrounded);
         SetAnimatorBool("IsRunning", false);
         SetAnimatorBool("IsFalling", false);
+
+        // Inicializar los nuevos bools en false
+        SetAnimatorBool("IsReceivingPunch", false);
+        SetAnimatorBool("IsStunned", false);
 
         wasGrounded = playerModel.IsGrounded;
         wasMoving = false;
@@ -162,7 +163,6 @@ public class PlayerController : MonoBehaviour
     public void SetChatMode(bool enabled)
     {
         inChatMode = enabled;
-
         if (enabled)
         {
             Debug.Log("Player input disabled - Chat mode active");
@@ -195,7 +195,6 @@ public class PlayerController : MonoBehaviour
         Vector3 moveDirection = (forward * vertical + right * horizontal).normalized;
 
         playerModel.Move(moveDirection, playerModel.GetRigidbodyVelocity());
-
     }
 
     private void TryInteract()
@@ -237,7 +236,39 @@ public class PlayerController : MonoBehaviour
     {
         if (animatorReady && animator != null)
         {
-            SetAnimatorTrigger("ReceivePunchTrigger");
+            SetAnimatorBool("IsReceivingPunch", true);
+
+            StartCoroutine(ResetReceivePunchAfterDelay(0.5f)); 
+        }
+    }
+
+    public void OnStunned()
+    {
+        if (animatorReady && animator != null)
+        {
+            SetAnimatorBool("IsStunned", true);
+
+            StartCoroutine(ResetStunnedAfterDelay(playerModel.StunDuration));
+        }
+    }
+
+    private IEnumerator ResetReceivePunchAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        SetAnimatorBool("IsReceivingPunch", false);
+    }
+
+    private IEnumerator ResetStunnedAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        SetAnimatorBool("IsStunned", false);
+    }
+
+    public void ResetStunAnimation()
+    {
+        if (animatorReady && animator != null)
+        {
+            SetAnimatorBool("IsStunned", false);
         }
     }
 
@@ -274,14 +305,13 @@ public class PlayerController : MonoBehaviour
 
     private bool HasParameter(string paramName)
     {
-        if (animator == null || animator.runtimeAnimatorController == null)
-            return false;
+        if (animator == null || animator.runtimeAnimatorController == null) return false;
 
         foreach (AnimatorControllerParameter param in animator.parameters)
         {
-            if (param.name == paramName)
-                return true;
+            if (param.name == paramName) return true;
         }
+
         return false;
     }
 
@@ -290,13 +320,6 @@ public class PlayerController : MonoBehaviour
         if (!cursorLocked && Input.GetMouseButtonDown(0))
         {
             SetCursorLock(true);
-        }
-    }
-    public void OnStunned()
-    {
-        if (animatorReady && animator != null)
-        {
-            SetAnimatorTrigger("StunnedTrigger");
         }
     }
 

@@ -63,7 +63,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     private float GroundCheckRadius => movementStats.GroundCheckRadius;
     private float GroundCheckDistance => movementStats.GroundCheckDistance;
     private float PushForce => movementStats.PushForce;
-    private float StunDuration => movementStats.StunDuration;
+    public float StunDuration => movementStats.StunDuration;
 
     private void Start()
     {

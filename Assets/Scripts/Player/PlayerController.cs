@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     private bool animatorReady = false;
     private bool wasGrounded = true;
     private bool wasMoving = false;
+    private bool wasOnIce = false;
 
     public Animator modelSkinAnimator => playerView?.SkinModel;
 
@@ -83,9 +84,11 @@ public class PlayerController : MonoBehaviour
         // Inicializar los nuevos bools en false
         SetAnimatorBool("IsReceivingPunch", false);
         SetAnimatorBool("IsStunned", false);
+        SetAnimatorBool("IsOnIce", false);
 
         wasGrounded = playerModel.IsGrounded;
         wasMoving = false;
+        wasOnIce = false;
     }
 
     private void Update()
@@ -133,6 +136,7 @@ public class PlayerController : MonoBehaviour
         Vector3 velocity = playerModel.GetRigidbodyVelocity();
         bool isMovingHorizontally = new Vector3(velocity.x, 0, velocity.z).magnitude > 0.1f;
         bool isFalling = !isGrounded && velocity.y < -0.1f;
+        bool isOnIce = playerModel.IsOnIce;
 
         if (wasGrounded != isGrounded)
         {
@@ -158,6 +162,13 @@ public class PlayerController : MonoBehaviour
         }
 
         SetAnimatorBool("IsFalling", isFalling);
+
+        // Actualizar estado de hielo
+        if (wasOnIce != isOnIce)
+        {
+            SetAnimatorBool("IsOnIce", isOnIce);
+            wasOnIce = isOnIce;
+        }
     }
 
     public void SetChatMode(bool enabled)
@@ -201,11 +212,18 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            playerModel.TryInteract();
+            bool interactedWithButton = playerModel.TryInteract();
 
             if (animatorReady)
             {
-                SetAnimatorTrigger("PunchTrigger");
+                if (interactedWithButton)
+                {
+                    SetAnimatorTrigger("ButtonTrigger");
+                }
+                else
+                {
+                    SetAnimatorTrigger("PunchTrigger");
+                }
             }
         }
 

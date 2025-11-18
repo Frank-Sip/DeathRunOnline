@@ -47,6 +47,8 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
     private bool isOnIce = false;
     private float iceControlMultiplier = 1f;
+    
+    private float speedMultiplier = 1f;
 
     public bool isAlive = true;
     public PhotonView PhotonView => photonView ?? GetComponent<PhotonView>();
@@ -56,7 +58,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     public float JumpBufferCounter => jumpBufferCounter;
     public Action<PlayerModel> OnPlayerDeath;
 
-    private float MoveSpeed => movementStats.MoveSpeed;
+    private float MoveSpeed => movementStats.MoveSpeed * speedMultiplier;
     private float RotationSpeed => movementStats.RotationSpeed;
     private float JumpForce => movementStats.JumpForce;
     private float CoyoteTime => movementStats.CoyoteTime;
@@ -179,6 +181,8 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             string playerTag = tagValue.ToString();
             PlayerNickname playerNickname = GetComponent<PlayerNickname>();
             playerNickname.SetPlayerTag(playerTag);
+            
+            UpdateSpeedBasedOnTag(playerTag);
         }
     }
 
@@ -276,7 +280,6 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
                 
                 interactableComp.Interact();
                 
-                // Solo aplicar stun si NO es un botón
                 if (!interactedWithButton)
                 {
                     PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
@@ -286,7 +289,6 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             }
         }
         
-        // Si no hay ningún interactuable, aplicar stun (es un golpe al aire o a un jugador)
         PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
         return false;
     }
@@ -338,6 +340,21 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         if (playerNickname != null)
         {
             playerNickname.SetPlayerTag(newTag);
+        }
+        
+        UpdateSpeedBasedOnTag(newTag);
+    }
+    
+    private void UpdateSpeedBasedOnTag(string tag)
+    {
+        if (tag != null && tag.ToLower() == "killer")
+        {
+            speedMultiplier = movementStats.KillerSpeedMultiplier;
+            Debug.Log($"[PlayerModel] Velocidad de Killer aplicada: {MoveSpeed} (x{speedMultiplier})");
+        }
+        else
+        {
+            speedMultiplier = 1f;
         }
     }
 

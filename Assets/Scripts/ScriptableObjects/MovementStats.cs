@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [CreateAssetMenu(fileName = "Movement Stats", menuName = "Player/Movement Stats")]
 public class MovementStats : ScriptableObject
@@ -6,6 +6,10 @@ public class MovementStats : ScriptableObject
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float rotationSpeed = 10f;
+    
+    [Header("Killer Speed Boost")]
+    [SerializeField] private float killerSpeedMultiplier = 3f;
+    [Tooltip("Multiplicador de velocidad para el Killer")]
     
     [Header("Jump Settings")]
     [SerializeField] private float jumpForce = 8f;
@@ -22,6 +26,7 @@ public class MovementStats : ScriptableObject
     
     public float MoveSpeed => moveSpeed;
     public float RotationSpeed => rotationSpeed;
+    public float KillerSpeedMultiplier => killerSpeedMultiplier;
     public float JumpForce => jumpForce;
     public float CoyoteTime => coyoteTime;
     public float JumpBufferTime => jumpBufferTime;

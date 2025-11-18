@@ -3,7 +3,7 @@
 [RequireComponent(typeof(Collider))]
 public class IceSurface : MonoBehaviour
 {
-    [SerializeField] private float controlReduction = 0.5f; // Reducción de control sobre hielo (0 = sin control, 1 = control total)
+    [SerializeField] private float controlReduction = 0.5f; 
     
     private void OnCollisionStay(Collision collision)
     {

@@ -175,9 +175,19 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         if (IsPlayerRunner(otherPlayer))
         {
-            photonView.RPC("RPC_DecrementRunnerCount", RpcTarget.MasterClient);
-            Debug.Log($"Runner {otherPlayer.NickName} se desconectó.");
+            photonView.RPC("RPC_DecrementRunnerCount", RpcTarget.All);
+            Debug.Log($"Runner {otherPlayer.NickName} se desconectó. Decrementando contador.");
         }
+    }
+
+    public override void OnMasterClientSwitched(Player newMasterClient)
+    {
+        base.OnMasterClientSwitched(newMasterClient);
+        
+        if (!matchStarted || gameEnded) return;
+        
+        Debug.Log($"MasterClient cambió a: {newMasterClient.NickName}. Verificando victoria del Killer.");
+        CheckKillerWin();
     }
 
     private bool IsPlayerRunner(Player player)

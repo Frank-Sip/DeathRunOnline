@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 10
   rotationSpeed: 10
+  killerSpeedMultiplier: 3
   jumpForce: 8
   coyoteTime: 0.2
   jumpBufferTime: 0.2
   groundCheckRadius: 0.5
   groundCheckDistance: 0.1
-  pushForce: 10
+  pushForce: 80
   stunDuration: 1

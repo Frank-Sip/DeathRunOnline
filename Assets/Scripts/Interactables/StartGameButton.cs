@@ -60,7 +60,7 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
         photonView.RPC("RPC_RemovePreLobbyWall", RpcTarget.All);
         gameTagManager.AssignRandomTags();
         
-        yield return new WaitForSeconds(0.2f); //Delay para sincornizar todas las CustomProperties y no quede ninguna afuera
+        yield return new WaitForSeconds(0.2f); 
 
         matchStartTime = (float)PhotonNetwork.Time;
         photonView.RPC("RPC_SyncMatchStartTime", RpcTarget.AllBuffered, matchStartTime);

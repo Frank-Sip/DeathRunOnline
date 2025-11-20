@@ -27,6 +27,9 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     [Header("See Player Tags")]
     public KeyCode seeTagKey = KeyCode.Tab;
 
+    [Header("Debug Teleport")]
+    [SerializeField] private Vector3 debugTeleportPosition = Vector3.zero;
+
     private const string PLAYER_TAG_KEY = "playerTag";
 
     private PhotonView photonView;
@@ -123,6 +126,12 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         if (!PhotonView.IsMine)
             return;
 
+        // Debug: Teleport con tecla 0
+        if (Input.GetKeyDown(KeyCode.Alpha0))
+        {
+            DebugTeleport();
+        }
+
         if (isBeingGrabbed)
         {
             rb.velocity = Vector3.zero;
@@ -154,6 +163,15 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         {
             DeathCameraManager.Instance.ActivateNextCamera();
         }
+    }
+
+    // Debug: Teletransporte simple para testear el win
+    private void DebugTeleport()
+    {
+        if (!PhotonView.IsMine) return;
+        
+        PhotonView.RPC("RPC_TeleportPlayer", RpcTarget.All, debugTeleportPosition);
+        Debug.Log($"[PlayerModel] Teletransportado a: {debugTeleportPosition}");
     }
 
     public void Interact()

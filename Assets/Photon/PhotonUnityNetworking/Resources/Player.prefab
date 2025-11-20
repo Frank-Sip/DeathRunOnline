@@ -530,6 +530,7 @@ MonoBehaviour:
     m_Bits: 136
   grabDuration: 3
   seeTagKey: 9
+  debugTeleportPosition: {x: -9.2, y: 0.64, z: 340}
   isAlive: 1
 --- !u!114 &1357956668931637226
 MonoBehaviour:
@@ -827,8 +828,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3793446389597177143}
-  m_LocalRotation: {x: -0.1119673, y: 0.88024807, z: -0.25778967, w: -0.38232335}
-  m_LocalPosition: {x: 1.4257169, y: 1.9532127, z: 1.3316407}
+  m_LocalRotation: {x: -0.091529325, y: 0.89268327, z: -0.21073395, w: -0.38772443}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

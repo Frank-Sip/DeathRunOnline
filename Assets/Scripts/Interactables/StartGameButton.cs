@@ -15,7 +15,7 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
 
     public static float GetElapsedTime()
     {
-        return Time.time - matchStartTime;
+        return (float)PhotonNetwork.Time - matchStartTime;
     }
 
     public void Interact()
@@ -62,7 +62,7 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
         
         yield return new WaitForSeconds(0.2f); //Delay para sincornizar todas las CustomProperties y no quede ninguna afuera
 
-        matchStartTime = Time.time;
+        matchStartTime = (float)PhotonNetwork.Time;
         photonView.RPC("RPC_SyncMatchStartTime", RpcTarget.AllBuffered, matchStartTime);
         photonView.RPC("RPC_StartMatch", RpcTarget.All);
 

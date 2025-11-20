@@ -178,6 +178,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             photonView.RPC("RPC_DecrementRunnerCount", RpcTarget.All);
             Debug.Log($"Runner {otherPlayer.NickName} se desconectó. Decrementando contador.");
         }
+        CheckKillerWin();
     }
 
     public override void OnMasterClientSwitched(Player newMasterClient)

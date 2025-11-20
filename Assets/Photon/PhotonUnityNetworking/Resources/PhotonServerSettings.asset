@@ -77,6 +77,11 @@ MonoBehaviour:
   - RPC_ApplyForce
   - RPC_UnpressButton
   - RPC_SyncMatchStartTime
+  - RPC_StartMatch
+  - RPC_RegisterRunner
+  - RPC_UnregisterRunner
+  - RPC_AddRunnerToCache
+  - RPC_RemoveRunnerFromCache
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

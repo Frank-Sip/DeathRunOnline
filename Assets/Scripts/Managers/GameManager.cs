@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
@@ -23,6 +24,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     public int ALiveRunnersCount => aliveRunnersCount;
     private bool gameEnded = false;
     private bool matchStarted = false;
+    
+    private HashSet<int> runnersCache = new HashSet<int>();
 
     private void Awake()
     {
@@ -44,7 +47,41 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         gameEnded = false;
         matchStarted = true;
-        Debug.Log($"Match started. Waiting for runner count...");
+        runnersCache.Clear();
+        
+        foreach (var player in PhotonNetwork.PlayerList)
+        {
+            if (player.CustomProperties.TryGetValue("playerTag", out object tagValue))
+            {
+                string tag = tagValue.ToString();
+                if (tag.ToLower() == "runner")
+                {
+                    runnersCache.Add(player.ActorNumber);
+                    Debug.Log($"[GameManager] Runner encontrado y agregado al cache: {player.NickName} (ActorNumber: {player.ActorNumber})");
+                }
+            }
+        }
+        
+        Debug.Log($"[GameManager] Match started. Runners en cache: {runnersCache.Count}");
+    }
+
+    public void AddRunnerToCache(int actorNumber)
+    {
+        runnersCache.Add(actorNumber);
+        Debug.Log($"[GameManager] Runner agregado al cache: ActorNumber {actorNumber}. Total: {runnersCache.Count}");
+    }
+
+    public void RemoveRunnerFromCache(int actorNumber)
+    {
+        if (runnersCache.Remove(actorNumber))
+        {
+            Debug.Log($"[GameManager] Runner removido del cache: ActorNumber {actorNumber}. Restantes: {runnersCache.Count}");
+        }
+    }
+
+    public bool IsRunnerInCache(int actorNumber)
+    {
+        return runnersCache.Contains(actorNumber);
     }
 
     [PunRPC]
@@ -57,27 +94,42 @@ public class GameManager : MonoBehaviourPunCallbacks
     [PunRPC]
     public void RPC_DecrementRunnerCount()
     {
-        if (!matchStarted || gameEnded) return;
+        if (!matchStarted || gameEnded)
+        {
+            Debug.Log($"[GameManager] RPC_DecrementRunnerCount ignorado - matchStarted: {matchStarted}, gameEnded: {gameEnded}");
+            return;
+        }
 
         aliveRunnersCount--;
-        Debug.Log($"----Runner died. Remaining runners: {aliveRunnersCount}");
+        Debug.Log($"[GameManager] ---- Runner count decrementado. Runners vivos: {aliveRunnersCount}");
 
         CheckKillerWin();
     }
 
     private void CheckKillerWin()
     {
+        Debug.Log($"[GameManager] CheckKillerWin - gameEnded: {gameEnded}, aliveRunnersCount: {aliveRunnersCount}");
+        
         if (gameEnded) return;
 
         if (aliveRunnersCount <= 0)
         {
+            Debug.Log($"[GameManager] ¡TODOS LOS RUNNERS ELIMINADOS! Buscando Killer...");
             Player killer = GameTagManager.Instance.GetKillerPlayer();
             if (killer != null)
             {
-                Debug.Log($"----GameManager: Procesando victoria de Killer: {killer.NickName}");
+                Debug.Log($"[GameManager] ¡¡¡VICTORIA DEL KILLER!!! Ganador: {killer.NickName}");
                 float elapsedTime = StartGameButton.GetElapsedTime();
                 photonView.RPC("RPC_ShowVictory", RpcTarget.All, killer.NickName, "Killer", elapsedTime);
             }
+            else
+            {
+                Debug.LogError($"[GameManager] ERROR: No se encontró al Killer!");
+            }
+        }
+        else
+        {
+            Debug.Log($"[GameManager] Aún quedan {aliveRunnersCount} runners. El juego continúa.");
         }
     }
 
@@ -111,7 +163,6 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         Debug.Log($"¡{winnerNickname} ({winnerType}) ha ganado la partida en {finalTime:F3} segundos!");
 
-        // Enviar score a LootLocker (solo el ganador local)
         if (PhotonNetwork.LocalPlayer.NickName == winnerNickname)
         {
             SubmitScoreToLeaderboard(finalTime, winnerType);
@@ -171,14 +222,30 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        if (!matchStarted || gameEnded) return;
-
-        if (IsPlayerRunner(otherPlayer))
+        Debug.Log($"[GameManager] OnPlayerLeftRoom - Player: {otherPlayer.NickName}, ActorNumber: {otherPlayer.ActorNumber}");
+        Debug.Log($"[GameManager] IsMasterClient: {PhotonNetwork.IsMasterClient}, matchStarted: {matchStarted}, gameEnded: {gameEnded}");
+        Debug.Log($"[GameManager] Cache actual de runners: [{string.Join(", ", runnersCache)}]");
+        
+        if (!matchStarted || gameEnded)
         {
-            photonView.RPC("RPC_DecrementRunnerCount", RpcTarget.All);
-            Debug.Log($"Runner {otherPlayer.NickName} se desconectó. Decrementando contador.");
+            Debug.Log($"[GameManager] Ignorado - matchStarted: {matchStarted}, gameEnded: {gameEnded}");
+            return;
         }
-        CheckKillerWin();
+
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log($"[GameManager] Este cliente NO es MasterClient. Ignorando desconexión.");
+            return;
+        }
+
+        bool isRunner = IsRunnerInCache(otherPlayer.ActorNumber);
+        Debug.Log($"[GameManager] IsRunnerInCache({otherPlayer.ActorNumber}): {isRunner}");
+        
+        if (isRunner)
+        {
+            RemoveRunnerFromCache(otherPlayer.ActorNumber);
+            photonView.RPC("RPC_DecrementRunnerCount", RpcTarget.All);
+        }
     }
 
     public override void OnMasterClientSwitched(Player newMasterClient)

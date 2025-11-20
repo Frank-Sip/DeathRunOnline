@@ -395,6 +395,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
             if (wasRunner)
             {
+                GameManager.Instance.RemoveRunnerFromCache(PhotonView.Owner.ActorNumber);
                 GameManager.Instance.photonView.RPC("RPC_DecrementRunnerCount", RpcTarget.All);
             }
         }

@@ -58,17 +58,22 @@ public class StartGameButton : MonoBehaviourPun, IInteractable
     {
         SetRoomPrivate();
         photonView.RPC("RPC_RemovePreLobbyWall", RpcTarget.All);
-
         gameTagManager.AssignRandomTags();
+        
+        yield return new WaitForSeconds(0.2f); //Delay para sincornizar todas las CustomProperties y no quede ninguna afuera
 
         matchStartTime = Time.time;
         photonView.RPC("RPC_SyncMatchStartTime", RpcTarget.AllBuffered, matchStartTime);
-        Debug.Log($"[StartGameButton] Timer iniciado en: {matchStartTime}");
+        photonView.RPC("RPC_StartMatch", RpcTarget.All);
 
-        GameManager.Instance.StartMatch();
-
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.3f);
         TeleportKillerToSpawn();
+    }
+
+    [PunRPC]
+    private void RPC_StartMatch()
+    {
+        GameManager.Instance.StartMatch();
     }
 
     [PunRPC]

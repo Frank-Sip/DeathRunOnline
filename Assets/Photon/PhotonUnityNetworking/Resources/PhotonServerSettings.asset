@@ -82,6 +82,7 @@ MonoBehaviour:
   - RPC_UnregisterRunner
   - RPC_AddRunnerToCache
   - RPC_RemoveRunnerFromCache
+  - RPC_ShowEveryoneLost
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

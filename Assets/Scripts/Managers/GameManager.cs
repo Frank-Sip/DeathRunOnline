@@ -124,7 +124,8 @@ public class GameManager : MonoBehaviourPunCallbacks
             }
             else
             {
-                Debug.LogError($"[GameManager] ERROR: No se encontró al Killer!");
+                Debug.LogWarning($"[GameManager] Killer desconectado. Todos perdieron.");
+                photonView.RPC("RPC_ShowEveryoneLost", RpcTarget.All);
             }
         }
         else
@@ -167,6 +168,28 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             SubmitScoreToLeaderboard(finalTime, winnerType);
         }
+
+        StartCoroutine(LoadMainMenuAfterDelay());
+    }
+
+    [PunRPC]
+    private void RPC_ShowEveryoneLost()
+    {
+        if (gameEnded) return;
+
+        gameEnded = true;
+        matchStarted = false;
+
+        if (victoryCanvas != null)
+        {
+            victoryCanvas.SetActive(true);
+            if (victoryText != null)
+            {
+                victoryText.text = "Todos Perdieron!\nEl Killer se desconectó";
+            }
+        }
+
+        Debug.Log("Todos perdieron porque el Killer se desconectó.");
 
         StartCoroutine(LoadMainMenuAfterDelay());
     }

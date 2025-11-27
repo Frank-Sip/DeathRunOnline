@@ -110,6 +110,12 @@ public class PlayerController : MonoBehaviour
                     HandleMovementInput();
                     HandleJumpInput();
                     TryInteract();
+
+                    // Handle Killer Teleportation,Solo detecta input
+                    if (playerModel.IsKiller && playerModel.TrapCount > 0)
+                    {
+                        HandleKillerTeleportation();
+                    }
                 }
             }
             else if (!playerModel.isAlive)
@@ -126,6 +132,19 @@ public class PlayerController : MonoBehaviour
         }
 
         UpdateVisuals();
+    }
+
+    /// Maneja el input de teletransportación del Killer (Q y E)
+    private void HandleKillerTeleportation()
+    {
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            playerModel.TeleportToPreviousTrap();
+        }
+        else if (Input.GetKeyDown(KeyCode.E))
+        {
+            playerModel.TeleportToNextTrap();
+        }
     }
 
     private void UpdateAnimatorStates()
@@ -256,7 +275,7 @@ public class PlayerController : MonoBehaviour
         {
             SetAnimatorBool("IsReceivingPunch", true);
 
-            StartCoroutine(ResetReceivePunchAfterDelay(0.5f)); 
+            StartCoroutine(ResetReceivePunchAfterDelay(0.5f));
         }
     }
 

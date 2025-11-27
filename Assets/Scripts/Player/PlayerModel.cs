@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json.Bson;
@@ -50,13 +50,19 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
     private bool isOnIce = false;
     private float iceControlMultiplier = 1f;
-    
+
     private float speedMultiplier = 1f;
+
+    // Killer Teleportation System
+    private bool isKiller = false;
+    private int currentTrapIndex = 0;
 
     public bool isAlive = true;
     public PhotonView PhotonView => photonView ?? GetComponent<PhotonView>();
     public bool IsGrounded => isGrounded;
     public bool IsOnIce => isOnIce;
+    public bool IsKiller => isKiller;
+    public int TrapCount => TrapTeleportManager.Instance != null ? TrapTeleportManager.Instance.TrapCount : 0;
     public float CoyoteTimeCounter => coyoteTimeCounter;
     public float JumpBufferCounter => jumpBufferCounter;
     public Action<PlayerModel> OnPlayerDeath;
@@ -76,7 +82,6 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         photonView = GetComponent<PhotonView>();
         rb = GetComponent<Rigidbody>();
         groundHits = new RaycastHit[maxGroundHits];
-
 
         if (PhotonNetwork.InRoom)
         {
@@ -169,7 +174,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     private void DebugTeleport()
     {
         if (!PhotonView.IsMine) return;
-        
+
         PhotonView.RPC("RPC_TeleportPlayer", RpcTarget.All, debugTeleportPosition);
         Debug.Log($"[PlayerModel] Teletransportado a: {debugTeleportPosition}");
     }
@@ -199,25 +204,79 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             string playerTag = tagValue.ToString();
             PlayerNickname playerNickname = GetComponent<PlayerNickname>();
             playerNickname.SetPlayerTag(playerTag);
-            
+
             UpdateSpeedBasedOnTag(playerTag);
+            UpdateKillerStatus(playerTag);
         }
     }
+
+    #region Killer Trap Teleportation Logic
+
+    public void TeleportToNextTrap()
+    {
+        if (!CanTeleport()) return;
+
+        currentTrapIndex = TrapTeleportManager.Instance.GetNextIndex(currentTrapIndex);
+        Vector3 targetPosition = TrapTeleportManager.Instance.GetTrapPosition(currentTrapIndex);
+
+        PhotonView.RPC("RPC_TeleportPlayer", RpcTarget.All, targetPosition);
+    }
+    public void TeleportToPreviousTrap()
+    {
+        if (!CanTeleport()) return;
+
+        currentTrapIndex = TrapTeleportManager.Instance.GetPreviousIndex(currentTrapIndex);
+        Vector3 targetPosition = TrapTeleportManager.Instance.GetTrapPosition(currentTrapIndex);
+
+        PhotonView.RPC("RPC_TeleportPlayer", RpcTarget.All, targetPosition);
+    }
+
+    private bool CanTeleport()
+    {
+        if (!isKiller)
+        {
+            return false;
+        }
+
+        if (TrapTeleportManager.Instance == null)
+        {
+            return false;
+        }
+
+        if (!TrapTeleportManager.Instance.HasTraps)
+        {
+            return false;
+        }
+
+        if (!isAlive)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public void ResetTrapIndex()
+    {
+        currentTrapIndex = 0;
+    }
+
+    #endregion
 
     public void Move(Vector3 moveDirection, Vector3 currentVelocity)
     {
         if (isStunned || !isAlive) return;
-        
+
         Vector3 adjustedMoveDirection = moveDirection * iceControlMultiplier;
-        
+
         if (isOnIce)
         {
             if (adjustedMoveDirection.magnitude > 0.01f)
             {
-                Vector3 force = adjustedMoveDirection * MoveSpeed * 200f; 
+                Vector3 force = adjustedMoveDirection * MoveSpeed * 200f;
                 rb.AddForce(force, ForceMode.Force);
             }
-            
+
             Vector3 horizontalVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
             if (horizontalVelocity.magnitude > MoveSpeed * 1.5f)
             {
@@ -287,26 +346,26 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             var interactableComp = interactables[i].GetComponent<IInteractable>();
             if (interactableComp != null)
             {
-                // Verificar si es un botón
-                if (interactables[i].GetComponent<ButtonTrap>() != null || 
+                // Verificar si es un bot�n
+                if (interactables[i].GetComponent<ButtonTrap>() != null ||
                     interactables[i].GetComponent<StartGameButton>() != null ||
                     interactables[i].GetComponent<DeadlyDoorButtons>() != null ||
                     interactables[i].name.ToLower().Contains("button"))
                 {
                     interactedWithButton = true;
                 }
-                
+
                 interactableComp.Interact();
-                
+
                 if (!interactedWithButton)
                 {
                     PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
                 }
-                
+
                 return interactedWithButton;
             }
         }
-        
+
         PhotonView.RPC("RPC_ApplyStun", RpcTarget.All, stunDuration);
         return false;
     }
@@ -359,10 +418,11 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         {
             playerNickname.SetPlayerTag(newTag);
         }
-        
+
         UpdateSpeedBasedOnTag(newTag);
+        UpdateKillerStatus(newTag);
     }
-    
+
     private void UpdateSpeedBasedOnTag(string tag)
     {
         if (tag != null && tag.ToLower() == "killer")
@@ -373,6 +433,23 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
         else
         {
             speedMultiplier = 1f;
+        }
+    }
+
+    private void UpdateKillerStatus(string tag)
+    {
+        bool wasKiller = isKiller;
+        isKiller = tag != null && tag.ToLower() == "killer";
+
+        if (isKiller != wasKiller)
+        {
+            Debug.Log($"[PlayerModel] Jugador {PhotonView.Owner.NickName} estado killer: {isKiller}");
+
+            if (isKiller)
+            {
+                ResetTrapIndex();
+                Debug.Log($"[PlayerModel] Sistema de teletransporte activado. Trampas disponibles: {TrapCount}");
+            }
         }
     }
 
@@ -459,7 +536,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
                 break;
             }
         }
-        
+
         Vector3 pushDirection = pusher.transform.forward;
         pushDirection.y = 0;
 
@@ -522,12 +599,12 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     public void RPC_ApplyStun(float duration)
     {
         if (!PhotonView.IsMine) return;
-        
+
         if (isGrabbing && grabbedPlayer != null)
         {
             PhotonView.RPC("RPC_ReleaseGrab", RpcTarget.All, grabbedPlayer.PhotonView.ViewID);
         }
-        
+
         isStunned = true;
         stunTimer = duration;
         rb.velocity = new Vector3(0, rb.velocity.y, 0);
@@ -538,7 +615,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
     public void RPC_ApplyForce(Vector3 force)
     {
         if (!PhotonView.IsMine) return;
-        
+
         if (rb != null)
         {
             rb.AddForce(force, ForceMode.VelocityChange);
@@ -567,7 +644,7 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
             rb.velocity = (Vector3)stream.ReceiveNext();
 
             float lag = Mathf.Abs((float)(PhotonNetwork.Time - info.SentServerTime));
-            
+
             position += rb.velocity * lag;
             rb.position = position;
             rb.rotation = rotation;
@@ -592,11 +669,17 @@ public class PlayerModel : MonoBehaviour, IPunObservable, IInteractable, IDamage
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.blue;
-        Vector3 sphereCenter = groundCheckOrigin.position;
-        Gizmos.DrawWireSphere(sphereCenter, GroundCheckRadius);
+        if (groundCheckOrigin != null)
+        {
+            Gizmos.color = Color.blue;
+            Vector3 sphereCenter = groundCheckOrigin.position;
+            Gizmos.DrawWireSphere(sphereCenter, GroundCheckRadius);
+        }
 
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(interactionPoint.position, interactionRadius);
+        if (interactionPoint != null)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(interactionPoint.position, interactionRadius);
+        }
     }
 }
